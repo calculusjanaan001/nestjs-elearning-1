@@ -1,0 +1,6 @@
+{
+  "type": "mongodb",
+  "host": "localhost",
+  "database": "elearning",
+  "entities": ["dist/**/*.entity{.ts,.js}"]
+}

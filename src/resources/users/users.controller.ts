@@ -8,8 +8,8 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  getAllUsers() {
-    return this.usersService.getAllUsers();
+  async getAllUsers() {
+    return await this.usersService.getAllUsers();
   }
 
   @Get(':id')

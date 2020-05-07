@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
 
-import { UserDto } from './dto/user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from './entity/user.entity';
 
 @Injectable()
@@ -18,24 +18,14 @@ export class UsersService {
     @InjectRepository(UserEntity) private usersRepo: Repository<UserEntity>,
   ) {}
 
-  async addUser(newUser: UserDto) {
-    try {
-      const user = await this.usersRepo.find({ email: newUser.email });
-      if (user) {
-        throw new ConflictException('Email already exists.');
-      }
-    } catch (error) {
-      throw new HttpException(
-        'Error in finding user.',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
+  async addUser(newUser: CreateUserDto) {
     try {
       const addedUser = await this.usersRepo.save(newUser);
 
       return addedUser.id;
     } catch (error) {
+      console.log('ERRPOR');
+      console.log(error);
       throw new HttpException(
         'Error in saving user.',
         HttpStatus.INTERNAL_SERVER_ERROR,

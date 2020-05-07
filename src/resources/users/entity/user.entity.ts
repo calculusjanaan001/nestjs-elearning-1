@@ -1,6 +1,7 @@
-import { Entity, Column, ObjectIdColumn } from 'typeorm';
+import { Entity, Column, ObjectIdColumn, Unique } from 'typeorm';
 
 @Entity()
+@Unique('uniqueEmail', ['email'])
 export class UserEntity {
   @ObjectIdColumn()
   id: number;

@@ -1,11 +1,11 @@
-import { Entity, Column, ObjectIdColumn, Unique } from 'typeorm';
+import { Entity, Column, ObjectIdColumn, Index } from 'typeorm';
 
-@Entity()
-@Unique('uniqueEmail', ['email'])
+@Entity('Users')
 export class UserEntity {
   @ObjectIdColumn()
   id: number;
 
+  @Index({ unique: true })
   @Column()
   email: string;
 

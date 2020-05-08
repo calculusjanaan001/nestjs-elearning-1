@@ -14,6 +14,8 @@ import { UserEntity } from './entity/user.entity';
 
 @Injectable()
 export class UsersService {
+  private readonly DUPLICATE_KEY_CODE = 11000;
+
   constructor(
     @InjectRepository(UserEntity) private usersRepo: Repository<UserEntity>,
   ) {}
@@ -24,8 +26,10 @@ export class UsersService {
 
       return addedUser.id;
     } catch (error) {
-      console.log('ERRPOR');
-      console.log(error);
+      /** Duplicate key error code */
+      if (error.code === this.DUPLICATE_KEY_CODE) {
+        throw new ConflictException('Email already exists.');
+      }
       throw new HttpException(
         'Error in saving user.',
         HttpStatus.INTERNAL_SERVER_ERROR,

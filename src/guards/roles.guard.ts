@@ -15,7 +15,7 @@ export class RolesGuard implements CanActivate {
     if (!user) {
       return false;
     }
-    console.log('ROLES ', roles);
+
     return this.matchRoles(roles, user.role);
   }
 

@@ -5,8 +5,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
+import { UsersModule } from '../users/users.module';
+
 @Module({
-  imports: [JwtModule.register({ secret: 'hard!to-guess_secret' })],
+  imports: [
+    JwtModule.register({ secret: 'hard!to-guess_secret' }),
+    UsersModule,
+  ],
   controllers: [AuthController],
   providers: [AuthService],
 })

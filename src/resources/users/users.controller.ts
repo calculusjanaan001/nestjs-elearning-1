@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Body,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -13,8 +20,12 @@ export class UsersController {
   }
 
   @Get(':id')
-  getUserById(@Param('id') id: string) {
-    return this.usersService.getUserById(id);
+  async getUserById(@Param('id') id: string) {
+    const user = await this.usersService.getUserById(id);
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+    return user;
   }
 
   @Post()

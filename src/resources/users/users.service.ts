@@ -1,9 +1,7 @@
 import {
   Injectable,
-  NotFoundException,
-  HttpException,
-  HttpStatus,
   ConflictException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -30,39 +28,32 @@ export class UsersService {
       if (error.code === this.DUPLICATE_KEY_CODE) {
         throw new ConflictException('Email already exists.');
       }
-      throw new HttpException(
-        'Error in saving user.',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+
+      throw new InternalServerErrorException('Error in saving user.');
     }
   }
 
   getAllUsers() {
     try {
-      return this.usersRepo.find();
+      return this.usersRepo.find({
+        select: ['id', 'email', 'role', 'firstName', 'lastName'],
+      });
     } catch (error) {
-      throw new HttpException(
-        'Error in getting all user.',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new InternalServerErrorException('Error in getting all user.');
     }
   }
 
   async getUserById(id: string) {
     try {
-      const user = await this.usersRepo.findOne(id);
+      const user = await this.usersRepo.findOne(id, {
+        select: ['id', 'email', 'role', 'firstName', 'lastName'],
+      });
       if (!user) {
-        throw new NotFoundException('User not found.');
+        return null;
       }
-
-      const { password: _, ...filtered } = user;
-
-      return filtered;
+      return user;
     } catch (error) {
-      throw new HttpException(
-        'Error in getting user.',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new InternalServerErrorException('Error in getting user.');
     }
   }
 }

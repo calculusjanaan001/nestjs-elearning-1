@@ -1,28 +1,37 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-
+import {
+  Injectable,
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+
+import { Repository } from 'typeorm';
 
 import { CredentialsDto } from './dto/credentials.dto';
-import { UsersService } from '../users/users.service';
+import { UserEntity } from '../users/entity/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
+    @InjectRepository(UserEntity) private usersRepo: Repository<UserEntity>,
     private readonly jwtService: JwtService,
   ) {}
 
-  authLogin(credentials: CredentialsDto) {
-    // const users = this.usersService.getAllUsers();
-    // const user = users.find(user => user.email === credentials.email);
-    // if (!user) {
-    //   throw new UnauthorizedException('Invalid credentials.');
-    // }
-    // if (user.password !== credentials.password) {
-    //   throw new UnauthorizedException('Invalid credentials.');
-    // }
-    // const token = this.jwtService.sign(JSON.stringify(user));
-    // return token;
-    return '';
+  async authLogin(credentials: CredentialsDto) {
+    try {
+      const user = await this.usersRepo.findOne({
+        email: credentials.email,
+        password: credentials.password,
+      });
+      if (!user) {
+        return null;
+      }
+
+      const token = this.jwtService.sign(JSON.stringify(user));
+      return token;
+    } catch (error) {
+      throw new UnauthorizedException('Error in finding user.');
+    }
   }
 }

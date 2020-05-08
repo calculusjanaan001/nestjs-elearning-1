@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -31,7 +27,7 @@ export class AuthService {
       const token = this.jwtService.sign(JSON.stringify(user));
       return token;
     } catch (error) {
-      throw new UnauthorizedException('Error in finding user.');
+      throw new InternalServerErrorException('Error in finding user.');
     }
   }
 }

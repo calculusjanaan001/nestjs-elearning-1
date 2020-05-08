@@ -5,9 +5,10 @@ import { Connection } from 'typeorm';
 
 import { UsersModule } from './resources/users/users.module';
 import { AuthModule } from './resources/auth/auth.module';
+import { SubjectsModule } from './resources/subjects/subjects.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(), AuthModule, UsersModule],
+  imports: [TypeOrmModule.forRoot(), AuthModule, UsersModule, SubjectsModule],
 })
 export class AppModule {
   constructor(private connection: Connection) {}

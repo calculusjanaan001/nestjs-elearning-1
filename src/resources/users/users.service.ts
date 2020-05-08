@@ -27,7 +27,7 @@ export class UsersService {
         updatedAt: createdDate,
       });
 
-      return addedUser.id;
+      return addedUser._id;
     } catch (error) {
       /** Duplicate key error code */
       if (error.code === this.DUPLICATE_KEY_CODE) {
@@ -41,7 +41,7 @@ export class UsersService {
   getAllUsers() {
     try {
       return this.usersRepo.find({
-        select: ['id', 'email', 'role', 'firstName', 'lastName'],
+        select: ['_id', 'email', 'role', 'firstName', 'lastName'],
       });
     } catch (error) {
       throw new InternalServerErrorException('Error in getting all user.');
@@ -51,7 +51,7 @@ export class UsersService {
   async getUserById(id: string) {
     try {
       const user = await this.usersRepo.findOne(id, {
-        select: ['id', 'email', 'role', 'firstName', 'lastName'],
+        select: ['_id', 'email', 'role', 'firstName', 'lastName'],
       });
       if (!user) {
         return null;

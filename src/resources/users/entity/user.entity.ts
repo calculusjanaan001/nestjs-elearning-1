@@ -3,7 +3,7 @@ import { Entity, Column, ObjectIdColumn, Index } from 'typeorm';
 @Entity('Users')
 export class UserEntity {
   @ObjectIdColumn()
-  id: number;
+  _id: number;
 
   @Index({ unique: true })
   @Column()

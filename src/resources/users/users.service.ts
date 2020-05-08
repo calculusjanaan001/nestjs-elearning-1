@@ -20,11 +20,11 @@ export class UsersService {
 
   async addUser(newUser: CreateUserDto) {
     try {
-      const createdDate = new Date().toISOString();
+      const dateNow = new Date().toISOString();
       const addedUser = await this.usersRepo.save({
         ...newUser,
-        createdAt: createdDate,
-        updatedAt: createdDate,
+        createdAt: dateNow,
+        updatedAt: dateNow,
       });
 
       return addedUser._id;

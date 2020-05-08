@@ -1,4 +1,4 @@
-import { Entity, Column, ObjectIdColumn, OneToOne } from 'typeorm';
+import { Entity, Column, ObjectIdColumn } from 'typeorm';
 
 import { UserEntity } from '../../users/entity/user.entity';
 
@@ -16,7 +16,6 @@ export class SubjectEntity {
   @Column({ default: true })
   isActive: boolean;
 
-  @OneToOne(type => UserEntity)
   @Column()
   owner: UserEntity;
 

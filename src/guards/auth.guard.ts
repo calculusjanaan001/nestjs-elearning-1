@@ -16,7 +16,13 @@ export class AuthGuard implements CanActivate {
       return false;
     }
 
-    return this.validateToken(authHeader);
+    const user = this.validateToken(authHeader);
+    if (!user) {
+      return false;
+    }
+    console.log(user);
+    request.user = user;
+    return true;
   }
 
   private validateToken(auth: string) {
@@ -26,11 +32,8 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid token.');
     }
     try {
-      const decode = jwt.verify(token, 'hard!to-guess_secret');
-      if (!decode) {
-        return false;
-      }
-      return true;
+      const decoded = jwt.verify(token, 'hard!to-guess_secret');
+      return decoded;
     } catch (error) {
       throw new UnauthorizedException('Token error.');
     }

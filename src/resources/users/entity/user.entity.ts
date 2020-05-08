@@ -12,7 +12,7 @@ export class UserEntity {
   @Column()
   password: string;
 
-  @Column()
+  @Column({ default: 'student' })
   role: string;
 
   @Column()
@@ -21,9 +21,9 @@ export class UserEntity {
   @Column()
   lastName: string;
 
-  @Column()
+  @Column({ default: new Date().toISOString() })
   updatedAt: string;
 
-  @Column()
+  @Column({ default: new Date().toISOString() })
   createdAt: string;
 }

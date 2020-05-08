@@ -1,7 +1,10 @@
 import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
 
 import { SubjectsService } from './subjects.service';
+
 import { AuthGuard } from '../../guards/auth.guard';
+import { Roles } from '../../decorators/roles.decorator';
+import { User } from '../../decorators/user.decorator';
 
 @Controller('subjects')
 @UseGuards(AuthGuard)
@@ -9,8 +12,9 @@ export class SubjectsController {
   constructor(private readonly subjectsService: SubjectsService) {}
 
   @Post()
-  createSubject(@Body('title') titleBody) {
-    return this.subjectsService.addSubject(titleBody);
+  @Roles('instructor')
+  createSubject(@User() user, @Body('title') titleBody) {
+    return this.subjectsService.addSubject(titleBody, user);
   }
 
   @Get()

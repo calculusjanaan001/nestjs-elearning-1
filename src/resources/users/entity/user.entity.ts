@@ -1,9 +1,9 @@
-import { Entity, Column, ObjectIdColumn, Index } from 'typeorm';
+import { Entity, Column, ObjectIdColumn, Index, ObjectID } from 'typeorm';
 
 @Entity('Users')
 export class UserEntity {
   @ObjectIdColumn()
-  _id: number;
+  _id: ObjectID;
 
   @Index({ unique: true })
   @Column()
@@ -12,7 +12,7 @@ export class UserEntity {
   @Column()
   password: string;
 
-  @Column({ default: 'student' })
+  @Column()
   role: string;
 
   @Column()
@@ -21,9 +21,9 @@ export class UserEntity {
   @Column()
   lastName: string;
 
-  @Column({ default: new Date().toISOString() })
+  @Column()
   updatedAt: string;
 
-  @Column({ default: new Date().toISOString() })
+  @Column()
   createdAt: string;
 }

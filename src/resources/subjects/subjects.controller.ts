@@ -1,10 +1,9 @@
 import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
 
-import { SubjectsService } from './subjects.service';
-
-import { AuthGuard } from '../../guards/auth.guard';
+import { AuthGuard, RolesGuard } from '../../guards';
 import { Roles } from '../../decorators/roles.decorator';
 import { User } from '../../decorators/user.decorator';
+import { SubjectsService } from './subjects.service';
 
 @Controller('subjects')
 @UseGuards(AuthGuard)
@@ -13,6 +12,7 @@ export class SubjectsController {
 
   @Post()
   @Roles('instructor')
+  @UseGuards(RolesGuard)
   createSubject(@User() user, @Body('title') titleBody) {
     return this.subjectsService.addSubject(titleBody, user);
   }

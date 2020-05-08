@@ -1,7 +1,7 @@
 import { Entity, Column, ObjectIdColumn, ObjectID } from 'typeorm';
 
-@Entity('Subjects')
-export class SubjectEntity {
+@Entity('Courses')
+export class CourseEntity {
   @ObjectIdColumn()
   _id: ObjectID;
 
@@ -9,13 +9,16 @@ export class SubjectEntity {
   title: string;
 
   @Column()
-  courses: Array<string>;
+  description: string;
+
+  @Column()
+  modules: Array<string>;
 
   @Column()
   isActive: boolean;
 
   @Column()
-  owner: string;
+  subject: string;
 
   @Column()
   slug: string;

@@ -27,7 +27,8 @@ export class UsersService {
         updatedAt: dateNow,
       });
 
-      return addedUser._id;
+      delete addedUser.password;
+      return addedUser;
     } catch (error) {
       /** Duplicate key error code */
       if (error.code === this.DUPLICATE_KEY_CODE) {

@@ -1,8 +1,8 @@
 import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
 
 import { AuthGuard, RolesGuard } from '../../guards';
-import { Roles } from '../../decorators/roles.decorator';
-import { User } from '../../decorators/user.decorator';
+import { Roles, User } from '../../decorators';
+
 import { SubjectsService } from './subjects.service';
 
 @Controller('subjects')

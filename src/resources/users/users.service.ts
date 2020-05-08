@@ -20,7 +20,12 @@ export class UsersService {
 
   async addUser(newUser: CreateUserDto) {
     try {
-      const addedUser = await this.usersRepo.save(newUser);
+      const createdDate = new Date().toISOString();
+      const addedUser = await this.usersRepo.save({
+        ...newUser,
+        createdAt: createdDate,
+        updatedAt: createdDate,
+      });
 
       return addedUser.id;
     } catch (error) {

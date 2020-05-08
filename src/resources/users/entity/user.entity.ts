@@ -20,4 +20,10 @@ export class UserEntity {
 
   @Column()
   lastName: string;
+
+  @Column()
+  updatedAt: string;
+
+  @Column()
+  createdAt: string;
 }

@@ -10,6 +10,7 @@ import { CreateCourseDto } from './dto/create-course.dto';
 @UseGuards(AuthGuard)
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
+
   @Post()
   @Roles('instructor')
   @UseGuards(RolesGuard)

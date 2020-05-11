@@ -23,8 +23,8 @@ export class CoursesService {
         .join('-');
       const dateNow = new Date().toISOString();
       const addedCourse = await this.coursesRepo.save({
-        title: newCourse.title,
-        subject: newCourse.subject,
+        ...newCourse,
+        modules: [],
         slug,
         slugHistory: [slug],
         isActive: true,

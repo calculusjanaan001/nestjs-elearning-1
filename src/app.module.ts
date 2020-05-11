@@ -7,9 +7,10 @@ import { UsersModule } from './resources/users/users.module';
 import { AuthModule } from './resources/auth/auth.module';
 import { SubjectsModule } from './resources/subjects/subjects.module';
 import { CoursesModule } from './resources/courses/courses.module';
+import { ModulesModule } from './resources/modules/modules.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(), AuthModule, UsersModule, SubjectsModule, CoursesModule],
+  imports: [TypeOrmModule.forRoot(), AuthModule, UsersModule, SubjectsModule, CoursesModule, ModulesModule],
 })
 export class AppModule {
   constructor(private connection: Connection) {}

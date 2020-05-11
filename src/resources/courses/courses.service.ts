@@ -29,7 +29,7 @@ export class CoursesService {
 
       await subjectManagerRepo.save({
         ...subject,
-        courses: subject.courses.concat(addedCourse),
+        courses: subject.courses.concat(addedCourse._id.toString()),
         updatedAt: dateNow,
       });
 

@@ -23,7 +23,7 @@ export class CourseEntity {
   @Column()
   slug: string;
 
-  @Column()
+  @Column({ name: 'slugHistory' })
   slug_history: Array<string>;
 
   @Column()

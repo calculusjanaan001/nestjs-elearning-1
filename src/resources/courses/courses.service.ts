@@ -17,10 +17,17 @@ export class CoursesService {
 
   async addCourse(newCourse: CreateCourseDto) {
     try {
+      const slug = newCourse.title
+        .toLowerCase()
+        .split(' ')
+        .join('-');
       const dateNow = new Date().toISOString();
       const addedCourse = await this.coursesRepo.save({
         title: newCourse.title,
         subject: newCourse.subject,
+        slug,
+        slugHistory: [slug],
+        isActive: true,
         createdAt: dateNow,
         updatedAt: dateNow,
       });

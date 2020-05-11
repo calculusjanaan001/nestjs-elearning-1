@@ -1,4 +1,4 @@
-import { Controller, UseGuards, Post, Body } from '@nestjs/common';
+import { Controller, UseGuards, Post, Body, Get, Param } from '@nestjs/common';
 
 import { AuthGuard, RolesGuard } from '../../guards';
 import { Roles } from '../../decorators/roles.decorator';
@@ -16,5 +16,15 @@ export class CoursesController {
   @UseGuards(RolesGuard)
   addCourse(@Body() courseBody: CreateCourseDto) {
     return this.coursesService.addCourse(courseBody);
+  }
+
+  @Get()
+  getCourses() {
+    return this.coursesService.getCourses();
+  }
+
+  @Get(':id')
+  getCourseById(@Param('id') courseId) {
+    return this.coursesService.getCouseById(courseId);
   }
 }

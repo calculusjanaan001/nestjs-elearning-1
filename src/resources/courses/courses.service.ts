@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Repository, ObjectID } from 'typeorm';
+import { Repository } from 'typeorm';
 import { getMongoRepository } from 'typeorm';
 
 import { CourseEntity } from './entity/course.entity';

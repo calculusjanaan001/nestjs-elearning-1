@@ -19,11 +19,15 @@ export class CoursesController {
   }
 
   @Get()
+  @Roles('instructor')
+  @UseGuards(RolesGuard)
   getCourses() {
     return this.coursesService.getCourses();
   }
 
   @Get(':id')
+  @Roles('instructor')
+  @UseGuards(RolesGuard)
   getCourseById(@Param('id') courseId) {
     return this.coursesService.getCouseById(courseId);
   }

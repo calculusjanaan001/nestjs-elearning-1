@@ -18,11 +18,15 @@ export class SubjectsController {
   }
 
   @Get()
+  @Roles('instructor')
+  @UseGuards(RolesGuard)
   getSubjects() {
     return this.subjectsService.getSubjects();
   }
 
   @Get(':id')
+  @Roles('instructor')
+  @UseGuards(RolesGuard)
   getSubjectById(@Param('id') subjectId: string) {
     return this.subjectsService.getSubjectById(subjectId);
   }

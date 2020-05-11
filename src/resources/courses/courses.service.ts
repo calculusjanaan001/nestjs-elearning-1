@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Repository } from 'typeorm';
+import { Repository, ObjectID } from 'typeorm';
 import { getMongoRepository } from 'typeorm';
 
 import { CourseEntity } from './entity/course.entity';
@@ -16,21 +16,27 @@ export class CoursesService {
   ) {}
 
   async addCourse(newCourse: CreateCourseDto) {
-    const dateNow = new Date().toISOString();
-    const addedCourse = await this.coursesRepo.save({
-      title: newCourse.title,
-      subject: newCourse.subject,
-      createdAt: dateNow,
-      updatedAt: dateNow,
-    });
-    const subjectManagerRepo = getMongoRepository(SubjectEntity);
+    try {
+      const dateNow = new Date().toISOString();
+      const addedCourse = await this.coursesRepo.save({
+        title: newCourse.title,
+        subject: newCourse.subject,
+        createdAt: dateNow,
+        updatedAt: dateNow,
+      });
+      const subjectManagerRepo = getMongoRepository(SubjectEntity);
+      const subject = await subjectManagerRepo.findOne(newCourse.subject);
 
-    await subjectManagerRepo.findOneAndUpdate(
-      { _id: newCourse.subject },
-      { $push: { 'list.$.courses': addedCourse }, updatedAt: dateNow },
-    );
+      await subjectManagerRepo.save({
+        ...subject,
+        courses: subject.courses.concat(addedCourse),
+        updatedAt: dateNow,
+      });
 
-    return addedCourse;
+      return addedCourse;
+    } catch (error) {
+      throw new InternalServerErrorException('Error in saving course.');
+    }
   }
 
   getCourses() {

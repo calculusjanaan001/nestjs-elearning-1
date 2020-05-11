@@ -27,6 +27,7 @@ export class SubjectsService {
       const dateNow = new Date().toISOString();
       const addedSubject = await this.subjectsRepo.save({
         title,
+        courses: [],
         owner: user._id.toString(),
         isActive: true,
         slug,

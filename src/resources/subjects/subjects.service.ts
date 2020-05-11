@@ -76,8 +76,13 @@ export class SubjectsService {
       const owner = await this.mongoUsersRepo.findOne(subject.owner, {
         select: ['_id', 'email', 'role', 'firstName', 'lastName'],
       });
+      const courses = await Promise.all(
+        subject.courses.map(async courseId => {
+          return await this.mongoCoursesRepo.findOne(courseId);
+        }),
+      );
 
-      return { ...subject, owner };
+      return { ...subject, owner, courses };
     } catch (error) {
       throw new InternalServerErrorException('Error in getting subject.');
     }

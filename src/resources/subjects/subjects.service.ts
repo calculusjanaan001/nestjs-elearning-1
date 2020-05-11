@@ -51,20 +51,16 @@ export class SubjectsService {
       const mappedSubjects = [];
       for (const subjectDetails of subjects) {
         const courses = [];
+        const owner = await this.mongoUsersRepo.findOne(subjectDetails.owner, {
+          select: ['_id', 'email', 'role', 'firstName', 'lastName'],
+        });
         for (const courseId of subjectDetails.courses) {
           const coursesDetails = await this.mongoCoursesRepo.findOne(courseId);
           courses.push(coursesDetails);
         }
-        mappedSubjects.push({ ...subjectDetails, courses });
+        mappedSubjects.push({ ...subjectDetails, courses, owner });
       }
-      return await Promise.all(
-        mappedSubjects.map(async subject => {
-          const owner = await this.mongoUsersRepo.findOne(subject.owner, {
-            select: ['_id', 'email', 'role', 'firstName', 'lastName'],
-          });
-          return { ...subject, owner };
-        }),
-      );
+      return mappedSubjects;
     } catch (error) {
       throw new InternalServerErrorException('Error in getting subjects.');
     }
@@ -73,14 +69,18 @@ export class SubjectsService {
   async getSubjectById(id: string) {
     try {
       const subject = await this.subjectsRepo.findOne(id);
-      const owner = await this.mongoUsersRepo.findOne(subject.owner, {
+      const ownerPromise = this.mongoUsersRepo.findOne(subject.owner, {
         select: ['_id', 'email', 'role', 'firstName', 'lastName'],
       });
-      const courses = await Promise.all(
+      const coursesPromise = Promise.all(
         subject.courses.map(async courseId => {
-          return await this.mongoCoursesRepo.findOne(courseId);
+          return this.mongoCoursesRepo.findOne(courseId);
         }),
       );
+      const [owner, courses] = await Promise.all([
+        ownerPromise,
+        coursesPromise,
+      ]);
 
       return { ...subject, owner, courses };
     } catch (error) {

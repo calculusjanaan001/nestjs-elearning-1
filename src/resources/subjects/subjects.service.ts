@@ -9,10 +9,14 @@ import { UserEntity } from '../users/entity/user.entity';
 
 @Injectable()
 export class SubjectsService {
+  private readonly mongoUsersRepo;
+
   constructor(
     @InjectRepository(SubjectEntity)
     private subjectsRepo: Repository<SubjectEntity>,
-  ) {}
+  ) {
+    this.mongoUsersRepo = getMongoRepository(UserEntity);
+  }
 
   async addSubject(title: string, user: UserEntity) {
     try {
@@ -37,19 +41,26 @@ export class SubjectsService {
     }
   }
 
-  getSubjects() {
+  async getSubjects() {
     try {
-      return this.subjectsRepo.find();
+      const subjects = await this.subjectsRepo.find();
+      return await Promise.all(
+        subjects.map(async subject => {
+          const owner = await this.mongoUsersRepo.findOne(subject.owner, {
+            select: ['_id', 'email', 'role', 'firstName', 'lastName'],
+          });
+          return { ...subject, owner };
+        }),
+      );
     } catch (error) {
       throw new InternalServerErrorException('Error in getting subjects.');
     }
   }
 
   async getSubjectById(id: string) {
-    const userMongoRepo = getMongoRepository(UserEntity);
     try {
       const subject = await this.subjectsRepo.findOne(id);
-      const owner = await userMongoRepo.findOne(subject.owner, {
+      const owner = await this.mongoUsersRepo.findOne(subject.owner, {
         select: ['_id', 'email', 'role', 'firstName', 'lastName'],
       });
 

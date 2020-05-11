@@ -32,4 +32,12 @@ export class CoursesService {
 
     return addedCourse;
   }
+
+  getCourses() {
+    return this.coursesRepo.find();
+  }
+
+  getCouseById(id: string) {
+    return this.coursesRepo.findOne(id);
+  }
 }

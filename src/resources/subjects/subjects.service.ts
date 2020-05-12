@@ -3,11 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
 import { getMongoRepository } from 'typeorm';
+import { ObjectID } from 'mongodb';
 
 import { SubjectEntity } from './entity/subject.entity';
 import { UserEntity } from '../users/entity/user.entity';
 import { CourseEntity } from '../courses/entity/course.entity';
+
 import { CreateSubjectDto } from './dto/create-subject.dto';
+import { UpdateSubjectDto } from './dto/update-subject.dto';
 
 @Injectable()
 export class SubjectsService {
@@ -87,6 +90,22 @@ export class SubjectsService {
       return { ...subject, owner, courses };
     } catch (error) {
       throw new InternalServerErrorException('Error in getting subject.');
+    }
+  }
+
+  async updateSubject(toUpdateSubject: UpdateSubjectDto, subjectId: string) {
+    try {
+      const mongoSubjectRepo = getMongoRepository(SubjectEntity);
+
+      const updatedObject = await mongoSubjectRepo.findOneAndUpdate(
+        { _id: new ObjectID(subjectId) },
+        { $set: { title: toUpdateSubject.title } },
+        { returnOriginal: false },
+      );
+
+      return updatedObject?.value;
+    } catch (error) {
+      throw new InternalServerErrorException('Error in updating subject.');
     }
   }
 }

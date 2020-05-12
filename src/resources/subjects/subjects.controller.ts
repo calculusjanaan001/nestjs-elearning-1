@@ -6,13 +6,17 @@ import {
   Param,
   UseGuards,
   BadRequestException,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 
 import { AuthGuard, RolesGuard } from '../../guards';
 import { Roles, User } from '../../decorators';
 
 import { SubjectsService } from './subjects.service';
-import { isObjectIdValid } from 'src/utils/validator';
+import { isObjectIdValid } from '../../utils/validator';
+
+import { CreateSubjectDto } from './dto/create-subject.dto';
 
 @Controller('subjects')
 @UseGuards(AuthGuard)
@@ -22,8 +26,9 @@ export class SubjectsController {
   @Post()
   @Roles('instructor')
   @UseGuards(RolesGuard)
-  createSubject(@User() user, @Body('title') titleBody) {
-    return this.subjectsService.addSubject(titleBody, user);
+  @UsePipes(ValidationPipe)
+  createSubject(@User() user, @Body() subjectBody: CreateSubjectDto) {
+    return this.subjectsService.addSubject(subjectBody, user);
   }
 
   @Get()

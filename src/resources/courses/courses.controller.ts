@@ -7,6 +7,8 @@ import {
   Param,
   BadRequestException,
   NotFoundException,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 
 import { AuthGuard, RolesGuard } from '../../guards';
@@ -25,6 +27,7 @@ export class CoursesController {
   @Post()
   @Roles('instructor')
   @UseGuards(RolesGuard)
+  @UsePipes(ValidationPipe)
   addCourse(@Body() courseBody: CreateCourseDto) {
     return this.coursesService.addCourse(courseBody);
   }

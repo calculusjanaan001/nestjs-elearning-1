@@ -1,8 +1,6 @@
 import { IsNotEmpty } from 'class-validator';
 
-export class CreateCourseDto {
+export class CreateSubjectDto {
   @IsNotEmpty()
   public title: string;
-  @IsNotEmpty()
-  public subject: string;
 }

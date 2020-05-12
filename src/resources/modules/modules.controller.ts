@@ -7,6 +7,8 @@ import {
   Param,
   NotFoundException,
   BadRequestException,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 
 import { ModulesService } from './modules.service';
@@ -25,6 +27,7 @@ export class ModulesController {
   @Post()
   @Roles('instructor')
   @UseGuards(RolesGuard)
+  @UsePipes(ValidationPipe)
   addModule(@Body() moduleBody: CreateModuleDto) {
     return this.modulesService.addModule(moduleBody);
   }

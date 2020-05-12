@@ -7,6 +7,7 @@ import { getMongoRepository } from 'typeorm';
 import { SubjectEntity } from './entity/subject.entity';
 import { UserEntity } from '../users/entity/user.entity';
 import { CourseEntity } from '../courses/entity/course.entity';
+import { CreateSubjectDto } from './dto/create-subject.dto';
 
 @Injectable()
 export class SubjectsService {
@@ -21,15 +22,15 @@ export class SubjectsService {
     this.mongoCoursesRepo = getMongoRepository(CourseEntity);
   }
 
-  async addSubject(title: string, user: UserEntity) {
+  async addSubject(newSubject: CreateSubjectDto, user: UserEntity) {
     try {
-      const slug = title
+      const slug = newSubject.title
         .toLowerCase()
         .split(' ')
         .join('-');
       const dateNow = new Date().toISOString();
       const addedSubject = await this.subjectsRepo.save({
-        title,
+        title: newSubject.title,
         courses: [],
         owner: user._id.toString(),
         isActive: true,

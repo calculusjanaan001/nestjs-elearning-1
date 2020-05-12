@@ -3,5 +3,6 @@
   "host": "localhost",
   "database": "elearning",
   "entities": ["dist/**/*.entity{.ts,.js}"],
+  "subscribers": ["dist/**/*.subscriber{.ts,.js}"],
   "synchronize": true
 }

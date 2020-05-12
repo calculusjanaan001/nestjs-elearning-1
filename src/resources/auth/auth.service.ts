@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 
 import { CredentialsDto } from './dto/credentials.dto';
@@ -18,13 +19,20 @@ export class AuthService {
     try {
       const user = await this.usersRepo.findOne({
         email: credentials.email,
-        password: credentials.password,
       });
       if (!user) {
         return null;
       }
+      const compareResult = await bcrypt.compare(
+        credentials.password,
+        user.password,
+      );
+      if (!compareResult) {
+        return null;
+      }
 
-      const token = this.jwtService.sign(JSON.stringify(user));
+      delete user.password;
+      const token = await this.jwtService.signAsync(JSON.stringify(user));
       return token;
     } catch (error) {
       throw new InternalServerErrorException('Error in finding user.');

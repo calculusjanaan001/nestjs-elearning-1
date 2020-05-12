@@ -42,7 +42,7 @@ export class ModulesService {
 
       return addedModule;
     } catch (error) {
-      throw new InternalServerErrorException(error, 'Error in saving module');
+      throw new InternalServerErrorException('Error in saving module');
     }
   }
 
@@ -58,10 +58,7 @@ export class ModulesService {
 
       return mappedModules;
     } catch (error) {
-      throw new InternalServerErrorException(
-        error,
-        'Error in getting modules.',
-      );
+      throw new InternalServerErrorException('Error in getting modules.');
     }
   }
 
@@ -75,7 +72,7 @@ export class ModulesService {
 
       return { ...mod, course: courseDetails };
     } catch (error) {
-      throw new InternalServerErrorException(error, 'Error in getting module.');
+      throw new InternalServerErrorException('Error in getting module.');
     }
   }
 }

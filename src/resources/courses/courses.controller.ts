@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 
 import { AuthGuard, RolesGuard } from '../../guards';
@@ -38,10 +39,14 @@ export class CoursesController {
   @Get(':id')
   @Roles('instructor')
   @UseGuards(RolesGuard)
-  getCourseById(@Param('id') courseId) {
-    if (!isObjectIdValid) {
+  async getCourseById(@Param('id') courseId: string) {
+    if (!isObjectIdValid(courseId)) {
       throw new BadRequestException('Invalid id.');
     }
-    return this.coursesService.getCouseById(courseId);
+    const course = await this.coursesService.getCourseById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found.');
+    }
+    return course;
   }
 }

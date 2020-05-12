@@ -42,7 +42,40 @@ export class ModulesService {
 
       return addedModule;
     } catch (error) {
-      throw new InternalServerErrorException('Error in saving module');
+      throw new InternalServerErrorException(error, 'Error in saving module');
+    }
+  }
+
+  async getModules() {
+    try {
+      const modules = await this.modulesRepo.find();
+      const mappedModules = await Promise.all(
+        modules.map(async mod => {
+          const courseDetails = await this.mongoCoursesRepo.findOne(mod.course);
+          return { ...mod, course: courseDetails };
+        }),
+      );
+
+      return mappedModules;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Error in getting modules.',
+      );
+    }
+  }
+
+  async getModuleById(id: string) {
+    try {
+      const mod = await this.modulesRepo.findOne(id);
+      if (!mod) {
+        return null;
+      }
+      const courseDetails = await this.mongoCoursesRepo.findOne(mod.course);
+
+      return { ...mod, course: courseDetails };
+    } catch (error) {
+      throw new InternalServerErrorException(error, 'Error in getting module.');
     }
   }
 }

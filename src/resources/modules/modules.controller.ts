@@ -1,4 +1,12 @@
-import { Controller, Body, Post, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Body,
+  Post,
+  UseGuards,
+  Get,
+  Param,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { ModulesService } from './modules.service';
 import { CreateModuleDto } from './dto/create-module.dto';
@@ -16,5 +24,19 @@ export class ModulesController {
   @UseGuards(RolesGuard)
   addModule(@Body() moduleBody: CreateModuleDto) {
     return this.modulesService.addModule(moduleBody);
+  }
+
+  @Get()
+  getModules() {
+    return this.modulesService.getModules();
+  }
+
+  @Get(':id')
+  async getModuleById(@Param('id') moduleId: string) {
+    const mod = await this.modulesService.getModuleById(moduleId);
+    if (!mod) {
+      throw new NotFoundException('Module not found.');
+    }
+    return mod;
   }
 }

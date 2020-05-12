@@ -1,10 +1,20 @@
-import { Controller, UseGuards, Post, Body, Get, Param } from '@nestjs/common';
+import {
+  Controller,
+  UseGuards,
+  Post,
+  Body,
+  Get,
+  Param,
+  BadRequestException,
+} from '@nestjs/common';
 
 import { AuthGuard, RolesGuard } from '../../guards';
 import { Roles } from '../../decorators/roles.decorator';
 
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
+
+import { isObjectIdValid } from '../../utils/validator';
 
 @Controller('courses')
 @UseGuards(AuthGuard)
@@ -29,6 +39,9 @@ export class CoursesController {
   @Roles('instructor')
   @UseGuards(RolesGuard)
   getCourseById(@Param('id') courseId) {
+    if (!isObjectIdValid) {
+      throw new BadRequestException('Invalid id.');
+    }
     return this.coursesService.getCouseById(courseId);
   }
 }

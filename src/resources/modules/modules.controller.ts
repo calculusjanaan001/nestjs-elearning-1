@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 
 import { ModulesService } from './modules.service';
@@ -13,6 +14,8 @@ import { CreateModuleDto } from './dto/create-module.dto';
 
 import { Roles } from '../../decorators';
 import { RolesGuard, AuthGuard } from '../../guards';
+
+import { isObjectIdValid } from '../../utils/validator';
 
 @Controller('modules')
 @UseGuards(AuthGuard)
@@ -33,6 +36,9 @@ export class ModulesController {
 
   @Get(':id')
   async getModuleById(@Param('id') moduleId: string) {
+    if (!isObjectIdValid(moduleId)) {
+      throw new BadRequestException('Invalid id.');
+    }
     const mod = await this.modulesService.getModuleById(moduleId);
     if (!mod) {
       throw new NotFoundException('Module not found.');

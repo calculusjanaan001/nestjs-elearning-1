@@ -7,6 +7,8 @@ export class CreateUserDto {
   public password: string;
   @IsNotEmpty()
   public role: string;
+  @IsNotEmpty()
   public firstName: string;
+  @IsNotEmpty()
   public lastName: string;
 }

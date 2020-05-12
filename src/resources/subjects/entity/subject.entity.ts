@@ -20,7 +20,7 @@ export class SubjectEntity {
   @Column()
   slug: string;
 
-  @Column({ name: 'slugHistory' })
+  @Column()
   slug_history: Array<string>;
 
   @Column()

@@ -35,7 +35,8 @@ export class SubjectsService {
         owner: user._id.toString(),
         isActive: true,
         slug,
-        slugHistory: [slug],
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        slug_history: [slug],
         createdAt: dateNow,
         updatedAt: dateNow,
       });

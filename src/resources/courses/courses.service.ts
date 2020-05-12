@@ -31,7 +31,8 @@ export class CoursesService {
         ...newCourse,
         modules: [],
         slug,
-        slugHistory: [slug],
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        slug_history: [slug],
         isActive: true,
         createdAt: dateNow,
         updatedAt: dateNow,

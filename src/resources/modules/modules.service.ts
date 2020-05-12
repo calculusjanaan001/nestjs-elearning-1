@@ -29,7 +29,8 @@ export class ModulesService {
       const addedModule = await this.modulesRepo.save({
         ...newModule,
         slug,
-        slugHistory: [slug],
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        slug_history: [slug],
         isActive: true,
         createdAt: dateNow,
         updatedAt: dateNow,

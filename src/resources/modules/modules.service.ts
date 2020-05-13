@@ -31,6 +31,7 @@ export class ModulesService {
       const dateNow = new Date().toISOString();
       const addedModule = await this.modulesRepo.save({
         ...newModule,
+        text: newModule?.text || '',
         slug,
         // eslint-disable-next-line @typescript-eslint/camelcase
         slug_history: [slug],

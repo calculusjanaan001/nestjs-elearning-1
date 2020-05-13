@@ -12,7 +12,7 @@ export class SubscriptionEntity {
   moduleInProgress: string;
 
   @Column()
-  status: string;
+  status: SubscriptionStatus;
 
   @Column()
   course: string;
@@ -25,4 +25,9 @@ export class SubscriptionEntity {
 
   @Column()
   updatedAt: string;
+}
+
+export enum SubscriptionStatus {
+  PENDING = 'pending',
+  COMPLETE = 'complete',
 }

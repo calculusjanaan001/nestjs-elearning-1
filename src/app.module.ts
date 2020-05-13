@@ -11,7 +11,15 @@ import { ModulesModule } from './resources/modules/modules.module';
 import { SubscriptionsModule } from './resources/subscriptions/subscriptions.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(), AuthModule, UsersModule, SubjectsModule, CoursesModule, ModulesModule, SubscriptionsModule],
+  imports: [
+    TypeOrmModule.forRoot(),
+    AuthModule,
+    UsersModule,
+    SubjectsModule,
+    CoursesModule,
+    ModulesModule,
+    SubscriptionsModule,
+  ],
 })
 export class AppModule {
   constructor(private connection: Connection) {}

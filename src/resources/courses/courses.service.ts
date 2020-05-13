@@ -15,6 +15,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 export class CoursesService {
   private readonly mongoModulesRepo;
   private readonly mongoSubjectsRepo;
+  private readonly mongoCoursesRepo;
 
   constructor(
     @InjectRepository(CourseEntity)
@@ -22,6 +23,7 @@ export class CoursesService {
   ) {
     this.mongoModulesRepo = getMongoRepository(ModuleEntity);
     this.mongoSubjectsRepo = getMongoRepository(SubjectEntity);
+    this.mongoCoursesRepo = getMongoRepository(CourseEntity);
   }
 
   async addCourse(newCourse: CreateCourseDto) {
@@ -103,9 +105,7 @@ export class CoursesService {
 
   async updateCourse(toUpdateCourse: UpdateCourseDto, courseId: string) {
     try {
-      const mongoCourseRepo = getMongoRepository(CourseEntity);
-
-      const updatedObject = await mongoCourseRepo.findOneAndUpdate(
+      const updatedObject = await this.mongoCoursesRepo.findOneAndUpdate(
         { _id: new ObjectID(courseId) },
         { $set: { title: toUpdateCourse.title } },
         { returnOriginal: false },
@@ -119,9 +119,7 @@ export class CoursesService {
 
   async deleteCourse(courseId: string) {
     try {
-      const mongoCourseRepo = getMongoRepository(CourseEntity);
-
-      const updatedObject = await mongoCourseRepo.findOneAndUpdate(
+      const updatedObject = await this.mongoCoursesRepo.findOneAndUpdate(
         { _id: new ObjectID(courseId) },
         { $set: { isActive: false } },
         { returnOriginal: false },

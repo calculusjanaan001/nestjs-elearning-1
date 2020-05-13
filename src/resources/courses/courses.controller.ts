@@ -18,9 +18,9 @@ import { Roles } from '../../decorators/roles.decorator';
 
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
+import { UpdateCourseDto } from './dto/update-course.dto';
 
 import { isObjectIdValid } from '../../utils/validator';
-import { UpdateCourseDto } from './dto/update-course.dto';
 
 @Controller('courses')
 @UseGuards(AuthGuard)

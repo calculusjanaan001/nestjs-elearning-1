@@ -9,6 +9,7 @@ import { CourseEntity } from './entity/course.entity';
 import { ModuleEntity } from '../modules/entity/module.entity';
 import { SubjectEntity } from '../subjects/entity/subject.entity';
 import { CreateCourseDto } from './dto/create-course.dto';
+import { UpdateCourseDto } from './dto/update-course.dto';
 
 @Injectable()
 export class CoursesService {
@@ -57,7 +58,9 @@ export class CoursesService {
 
   async getCourses() {
     try {
-      const courses = await this.coursesRepo.find();
+      const courses = await this.coursesRepo.find({
+        where: { isActive: true },
+      });
       const mappedCourses = [];
       for (const courseDetails of courses) {
         const modules = [];
@@ -79,19 +82,54 @@ export class CoursesService {
 
   async getCourseById(id: string) {
     try {
-      const course = await this.coursesRepo.findOne(id);
+      const course = await this.coursesRepo.findOne(id, {
+        where: { isActive: true },
+      });
       if (!course) {
         return null;
       }
+      const subject = await this.mongoSubjectsRepo.findOne(course.subject);
       const modules = await Promise.all(
         course.modules.map(async modId => {
           return await this.mongoModulesRepo.findOne(modId);
         }),
       );
 
-      return { ...course, modules };
+      return { ...course, modules, subject };
     } catch (error) {
       throw new InternalServerErrorException('Error in getting course.');
+    }
+  }
+
+  async updateCourse(toUpdateCourse: UpdateCourseDto, courseId: string) {
+    try {
+      const mongoCourseRepo = getMongoRepository(CourseEntity);
+
+      const updatedObject = await mongoCourseRepo.findOneAndUpdate(
+        { _id: new ObjectID(courseId) },
+        { $set: { title: toUpdateCourse.title } },
+        { returnOriginal: false },
+      );
+
+      return updatedObject?.value;
+    } catch (error) {
+      throw new InternalServerErrorException('Error in updating course.');
+    }
+  }
+
+  async deleteCourse(courseId: string) {
+    try {
+      const mongoCourseRepo = getMongoRepository(CourseEntity);
+
+      const updatedObject = await mongoCourseRepo.findOneAndUpdate(
+        { _id: new ObjectID(courseId) },
+        { $set: { isActive: false } },
+        { returnOriginal: false },
+      );
+
+      return updatedObject?.value;
+    } catch (error) {
+      throw new InternalServerErrorException('Error in deleting course.');
     }
   }
 }

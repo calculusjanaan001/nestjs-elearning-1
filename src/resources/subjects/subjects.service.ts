@@ -76,6 +76,9 @@ export class SubjectsService {
   async getSubjectById(id: string) {
     try {
       const subject = await this.subjectsRepo.findOne(id);
+      if (!subject) {
+        return null;
+      }
       const ownerPromise = this.mongoUsersRepo.findOne(subject.owner, {
         select: ['_id', 'email', 'role', 'firstName', 'lastName'],
       });

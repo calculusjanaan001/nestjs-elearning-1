@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
 import { getMongoRepository } from 'typeorm';
+import { ObjectID } from 'mongodb';
 
 import { CourseEntity } from './entity/course.entity';
 import { ModuleEntity } from '../modules/entity/module.entity';
@@ -12,12 +13,14 @@ import { CreateCourseDto } from './dto/create-course.dto';
 @Injectable()
 export class CoursesService {
   private readonly mongoModulesRepo;
+  private readonly mongoSubjectsRepo;
 
   constructor(
     @InjectRepository(CourseEntity)
     private coursesRepo: Repository<CourseEntity>,
   ) {
     this.mongoModulesRepo = getMongoRepository(ModuleEntity);
+    this.mongoSubjectsRepo = getMongoRepository(SubjectEntity);
   }
 
   async addCourse(newCourse: CreateCourseDto) {
@@ -37,14 +40,14 @@ export class CoursesService {
         createdAt: dateNow,
         updatedAt: dateNow,
       });
-      const subjectManagerRepo = getMongoRepository(SubjectEntity);
-      const subject = await subjectManagerRepo.findOne(newCourse.subject);
 
-      await subjectManagerRepo.save({
-        ...subject,
-        courses: subject.courses.concat(addedCourse._id.toString()),
-        updatedAt: dateNow,
-      });
+      await this.mongoSubjectsRepo.findOneAndUpdate(
+        { _id: new ObjectID(newCourse.subject) },
+        {
+          $push: { courses: addedCourse._id },
+          $set: { updatedAt: dateNow },
+        },
+      );
 
       return addedCourse;
     } catch (error) {
@@ -58,11 +61,14 @@ export class CoursesService {
       const mappedCourses = [];
       for (const courseDetails of courses) {
         const modules = [];
+        const subject = await this.mongoSubjectsRepo.findOne(
+          courseDetails.subject,
+        );
         for (const modId of courseDetails.modules) {
           const moduleDetails = await this.mongoModulesRepo.findOne(modId);
           modules.push(moduleDetails);
         }
-        mappedCourses.push({ ...courseDetails, modules });
+        mappedCourses.push({ ...courseDetails, modules, subject });
       }
 
       return mappedCourses;

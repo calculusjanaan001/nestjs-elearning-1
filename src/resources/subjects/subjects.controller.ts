@@ -10,6 +10,7 @@ import {
   ValidationPipe,
   Patch,
   Delete,
+  NotFoundException,
 } from '@nestjs/common';
 
 import { AuthGuard, RolesGuard } from '../../guards';
@@ -44,11 +45,15 @@ export class SubjectsController {
   @Get(':id')
   @Roles('instructor')
   @UseGuards(RolesGuard)
-  getSubjectById(@Param('id') subjectId: string) {
+  async getSubjectById(@Param('id') subjectId: string) {
     if (!isObjectIdValid(subjectId)) {
       throw new BadRequestException('Invalid id.');
     }
-    return this.subjectsService.getSubjectById(subjectId);
+    const subject = await this.subjectsService.getSubjectById(subjectId);
+    if (!subject) {
+      throw new NotFoundException('Subject not found.');
+    }
+    return subject;
   }
 
   @Patch(':id')

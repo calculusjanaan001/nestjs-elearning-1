@@ -9,6 +9,7 @@ import {
   UsePipes,
   ValidationPipe,
   Patch,
+  Delete,
 } from '@nestjs/common';
 
 import { AuthGuard, RolesGuard } from '../../guards';
@@ -67,6 +68,21 @@ export class SubjectsController {
     );
     if (!updatedSubject) {
       throw new BadRequestException('No subject updated.');
+    }
+    return updatedSubject;
+  }
+
+  @Delete(':id')
+  @Roles('instructor')
+  @UseGuards(RolesGuard)
+  @UsePipes(ValidationPipe)
+  async deleteSubject(@Param('id') subjectId: string) {
+    if (!isObjectIdValid(subjectId)) {
+      throw new BadRequestException('Invalid id.');
+    }
+    const updatedSubject = await this.subjectsService.deleteSubject(subjectId);
+    if (!updatedSubject) {
+      throw new BadRequestException('No subject deleted.');
     }
     return updatedSubject;
   }

@@ -52,7 +52,9 @@ export class SubjectsService {
 
   async getSubjects() {
     try {
-      const subjects = await this.subjectsRepo.find();
+      const subjects = await this.subjectsRepo.find({
+        where: { isActive: true },
+      });
       const mappedSubjects = [];
       for (const subjectDetails of subjects) {
         const courses = [];
@@ -106,6 +108,22 @@ export class SubjectsService {
       return updatedObject?.value;
     } catch (error) {
       throw new InternalServerErrorException('Error in updating subject.');
+    }
+  }
+
+  async deleteSubject(id: string) {
+    try {
+      const mongoSubjectRepo = getMongoRepository(SubjectEntity);
+
+      const updatedObject = await mongoSubjectRepo.findOneAndUpdate(
+        { _id: new ObjectID(id) },
+        { $set: { isActive: false } },
+        { returnOriginal: false },
+      );
+
+      return updatedObject?.value;
+    } catch (error) {
+      throw new InternalServerErrorException('Error in deleting subject.');
     }
   }
 }

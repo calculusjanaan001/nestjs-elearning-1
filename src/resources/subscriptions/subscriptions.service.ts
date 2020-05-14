@@ -13,7 +13,6 @@ import {
 import { UserEntity } from '../users/entity/user.entity';
 import { CourseEntity } from '../courses/entity/course.entity';
 import { ModuleEntity } from '../modules/entity/module.entity';
-import { PopulateService, EntityType } from 'src/utils/populator';
 
 @Injectable()
 export class SubscriptionsService {
@@ -24,7 +23,6 @@ export class SubscriptionsService {
   constructor(
     @InjectRepository(SubscriptionEntity)
     private subscriptionsRepo: Repository<SubscriptionEntity>,
-    private populateService: PopulateService,
   ) {
     this.mongoCoursesRepo = getMongoRepository(CourseEntity);
     this.mongoModulesRepo = getMongoRepository(ModuleEntity);
@@ -161,9 +159,8 @@ export class SubscriptionsService {
         return null;
       }
       let populateUpdatedSubs = { ...updatedSubscription.value };
-      const modules = await this.populateService.populateMany(
-        populateUpdatedSubs.completedModules,
-        EntityType.MODULE,
+      const modules = await this.populateModules(
+        updatedSubscription.completedModules,
       );
       if (populateUpdatedSubs?.moduleInProgress) {
         const moduleInProgress = await this.populateModule(

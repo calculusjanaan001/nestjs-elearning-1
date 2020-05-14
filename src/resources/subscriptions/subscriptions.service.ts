@@ -1,20 +1,27 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Scope,
+  Inject,
+} from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository, getMongoRepository } from 'typeorm';
 import { ObjectID } from 'mongodb';
+import { Request } from 'express';
 
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+
 import {
   SubscriptionEntity,
   SubscriptionStatus,
 } from './entity/subscription.entity';
-import { UserEntity } from '../users/entity/user.entity';
 import { CourseEntity } from '../courses/entity/course.entity';
 import { ModuleEntity } from '../modules/entity/module.entity';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class SubscriptionsService {
   private readonly mongoCoursesRepo;
   private readonly mongoModulesRepo;
@@ -23,16 +30,15 @@ export class SubscriptionsService {
   constructor(
     @InjectRepository(SubscriptionEntity)
     private subscriptionsRepo: Repository<SubscriptionEntity>,
+    @Inject(REQUEST) private request: Request,
   ) {
     this.mongoCoursesRepo = getMongoRepository(CourseEntity);
     this.mongoModulesRepo = getMongoRepository(ModuleEntity);
     this.mongoSubsRepo = getMongoRepository(SubscriptionEntity);
   }
 
-  async subscribe(
-    newSubscription: CreateSubscriptionDto,
-    currentUser: UserEntity,
-  ) {
+  async subscribe(newSubscription: CreateSubscriptionDto) {
+    const currentUser = (this.request as any).user;
     try {
       const dateNow = new Date().toISOString();
       const addedSubscription = await this.subscriptionsRepo.save({
@@ -51,36 +57,16 @@ export class SubscriptionsService {
     }
   }
 
-  async getUserSubscriptions(currentUser: UserEntity) {
+  async getUserSubscriptions() {
+    const currentUser = (this.request as any).user;
     try {
       const subscriptions = await this.subscriptionsRepo.find({
         where: { subscriber: currentUser._id.toString() },
       });
       const mappedSubscriptions = [];
       for (const subsDetails of subscriptions) {
-        let populateSubscription = { ...subsDetails };
-        const course = await this.populateCourse(subsDetails.course);
-        if (subsDetails?.moduleInProgress) {
-          const module = await this.populateModule(
-            subsDetails?.moduleInProgress,
-          );
-          populateSubscription = {
-            ...populateSubscription,
-            moduleInProgress: module,
-          };
-        }
-        if (subsDetails?.completedModules.length) {
-          const modules = [];
-          for (const modId of subsDetails.completedModules) {
-            const module = await this.populateModule(modId);
-            modules.push(module);
-          }
-          populateSubscription = {
-            ...populateSubscription,
-            completedModules: modules,
-          };
-        }
-        mappedSubscriptions.push({ ...populateSubscription, course });
+        const mappedResults = await this.populateSubscription(subsDetails);
+        mappedSubscriptions.push(mappedResults);
       }
 
       return mappedSubscriptions;
@@ -91,10 +77,8 @@ export class SubscriptionsService {
     }
   }
 
-  async getUserSubscriptionById(
-    currentUser: UserEntity,
-    subscriptionId: string,
-  ) {
+  async getUserSubscriptionById(subscriptionId: string) {
+    const currentUser = (this.request as any).user;
     try {
       const subscription = await this.subscriptionsRepo.findOne({
         where: {
@@ -105,22 +89,7 @@ export class SubscriptionsService {
       if (!subscription) {
         return null;
       }
-      let populatedSubscription = { ...subscription };
-      const course = await this.populateCourse(subscription.course);
-      if (subscription?.moduleInProgress) {
-        const module = await this.populateModule(subscription.moduleInProgress);
-        populatedSubscription = {
-          ...populatedSubscription,
-          moduleInProgress: module,
-        };
-      }
-      if (subscription?.completedModules.length) {
-        const completedModules = await this.populateModules(
-          subscription.completedModules,
-        );
-        populatedSubscription = { ...populatedSubscription, completedModules };
-      }
-      return { ...populatedSubscription, course };
+      return this.populateSubscription(subscription);
     } catch (error) {
       throw new InternalServerErrorException(
         "Error in getting user's subscriptions.",
@@ -157,27 +126,7 @@ export class SubscriptionsService {
       if (!updatedSubscription?.value) {
         return null;
       }
-      let populateUpdatedSubs = { ...updatedSubscription.value };
-      if (populateUpdatedSubs?.completedModules?.length) {
-        const modules = await this.populateModules(
-          populateUpdatedSubs.completedModules,
-        );
-        populateUpdatedSubs = {
-          ...populateUpdatedSubs,
-          completedModules: modules,
-        };
-      }
-      if (populateUpdatedSubs?.moduleInProgress) {
-        const moduleInProgress = await this.populateModule(
-          populateUpdatedSubs.moduleInProgress,
-        );
-        populateUpdatedSubs = { ...populateUpdatedSubs, moduleInProgress };
-      }
-
-      return {
-        ...populateUpdatedSubs,
-        course,
-      };
+      return this.populateSubscription(updatedSubscription?.value);
     } catch (error) {
       throw new InternalServerErrorException('Error in updating subscription.');
     }
@@ -226,5 +175,34 @@ export class SubscriptionsService {
     } catch (error) {
       throw new InternalServerErrorException('Error in getting modules.');
     }
+  }
+
+  private async populateSubscription(subscription: SubscriptionEntity) {
+    const promiseList = [];
+    const course = this.populateCourse(subscription.course).then(result => ({
+      course: result,
+    }));
+    promiseList.push(course);
+    if (subscription?.moduleInProgress) {
+      const module = this.populateModule(
+        subscription?.moduleInProgress,
+      ).then(result => ({ moduleInProgress: result }));
+      promiseList.push(module);
+    }
+    if (subscription?.completedModules.length) {
+      const modules = this.populateModules(
+        subscription.completedModules,
+      ).then(result => ({ completedModules: result }));
+      promiseList.push(modules);
+    }
+    const results = await Promise.all(promiseList);
+    return results.reduce(
+      (acc, current) => {
+        for (const key of Object.keys(current)) {
+          return { ...acc, [key]: current[key] };
+        }
+      },
+      { ...subscription },
+    );
   }
 }

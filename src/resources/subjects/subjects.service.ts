@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { Repository } from 'typeorm';
 import { getMongoRepository } from 'typeorm';
-import { ObjectID } from 'mongodb';
+import { ObjectID, ObjectId } from 'mongodb';
 
 import { SubjectEntity } from './entity/subject.entity';
 import { UserEntity } from '../users/entity/user.entity';
@@ -71,9 +71,8 @@ export class SubjectsService {
         const ownerPromise = this.mongoUsersRepo.findOne(subjectDetails.owner, {
           select: ['_id', 'email', 'role', 'firstName', 'lastName'],
         });
-        const coursesPromise = this.mongoCoursesRepo.findByIds(
-          subjectDetails.courses,
-        );
+        const objectIdList = subjectDetails.courses.map(id => new ObjectId(id));
+        const coursesPromise = this.mongoCoursesRepo.findByIds(objectIdList);
         const [owner, courses] = await Promise.all([
           ownerPromise,
           coursesPromise,
@@ -95,7 +94,8 @@ export class SubjectsService {
       const ownerPromise = this.mongoUsersRepo.findOne(subject.owner, {
         select: ['_id', 'email', 'role', 'firstName', 'lastName'],
       });
-      const coursesPromise = this.mongoCoursesRepo.findByIds(subject.courses);
+      const objectIdList = subject.courses.map(id => new ObjectId(id));
+      const coursesPromise = this.mongoCoursesRepo.findByIds(objectIdList);
       const [owner, courses] = await Promise.all([
         ownerPromise,
         coursesPromise,

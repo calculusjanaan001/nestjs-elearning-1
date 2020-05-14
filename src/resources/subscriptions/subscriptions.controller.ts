@@ -9,6 +9,7 @@ import {
   Param,
   NotFoundException,
   Patch,
+  Delete,
 } from '@nestjs/common';
 
 import { SubscriptionsService } from './subscriptions.service';
@@ -74,6 +75,20 @@ export class SubscriptionsController {
 
     if (!subscription) {
       throw new NotFoundException('No subscription updated.');
+    }
+    return subscription;
+  }
+
+  @Delete(':id')
+  @Roles('student')
+  @UseGuards(RolesGuard)
+  async deleteSubscription(@Param('id') subscriptionId: string) {
+    const subscription = await this.subscriptionsService.deleteSubscription(
+      subscriptionId,
+    );
+
+    if (!subscription) {
+      throw new NotFoundException('No subscription deleted.');
     }
     return subscription;
   }

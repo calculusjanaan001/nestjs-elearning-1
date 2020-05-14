@@ -13,6 +13,7 @@ import {
 import { UserEntity } from '../users/entity/user.entity';
 import { CourseEntity } from '../courses/entity/course.entity';
 import { ModuleEntity } from '../modules/entity/module.entity';
+import { PopulateService, EntityType } from 'src/utils/populator';
 
 @Injectable()
 export class SubscriptionsService {
@@ -23,6 +24,7 @@ export class SubscriptionsService {
   constructor(
     @InjectRepository(SubscriptionEntity)
     private subscriptionsRepo: Repository<SubscriptionEntity>,
+    private populateService: PopulateService,
   ) {
     this.mongoCoursesRepo = getMongoRepository(CourseEntity);
     this.mongoModulesRepo = getMongoRepository(ModuleEntity);
@@ -159,8 +161,9 @@ export class SubscriptionsService {
         return null;
       }
       let populateUpdatedSubs = { ...updatedSubscription.value };
-      const modules = await this.populateModules(
+      const modules = await this.populateService.populateMany(
         populateUpdatedSubs.completedModules,
+        EntityType.MODULE,
       );
       if (populateUpdatedSubs?.moduleInProgress) {
         const moduleInProgress = await this.populateModule(
@@ -176,6 +179,19 @@ export class SubscriptionsService {
       };
     } catch (error) {
       throw new InternalServerErrorException('Error in updating subscription.');
+    }
+  }
+
+  async deleteSubscription(id: string) {
+    try {
+      const deletedSubscription = await this.mongoSubsRepo.findOneAndDelete({
+        _id: new ObjectID(id),
+      });
+
+      return deletedSubscription?.value;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException('Error in deleting subscription.');
     }
   }
 

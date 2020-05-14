@@ -19,14 +19,9 @@ export enum EntityType {
 
 @Injectable()
 export class PopulateService {
-  async populateOne(id: string, filterOpts = null, type = EntityType.SUBJECT) {
+  async populateOne(id: string, type = EntityType.SUBJECT) {
     const entityRepo = this.mongoRepositoryFactory(type);
-    if (filterOpts) {
-      return await entityRepo.findOne(
-        { _id: new ObjectID(id) },
-        { ...filterOpts },
-      );
-    }
+
     return await entityRepo.findOne({ _id: new ObjectID(id) });
   }
 

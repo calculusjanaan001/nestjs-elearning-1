@@ -5,6 +5,7 @@ import { Repository, getMongoRepository } from 'typeorm';
 import { ObjectID } from 'mongodb';
 
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import {
   SubscriptionEntity,
   SubscriptionStatus,
@@ -17,6 +18,7 @@ import { ModuleEntity } from '../modules/entity/module.entity';
 export class SubscriptionsService {
   private readonly mongoCoursesRepo;
   private readonly mongoModulesRepo;
+  private readonly mongoSubsRepo;
 
   constructor(
     @InjectRepository(SubscriptionEntity)
@@ -24,6 +26,7 @@ export class SubscriptionsService {
   ) {
     this.mongoCoursesRepo = getMongoRepository(CourseEntity);
     this.mongoModulesRepo = getMongoRepository(ModuleEntity);
+    this.mongoSubsRepo = getMongoRepository(SubscriptionEntity);
   }
 
   async subscribe(
@@ -122,6 +125,57 @@ export class SubscriptionsService {
       throw new InternalServerErrorException(
         "Error in getting user's subscriptions.",
       );
+    }
+  }
+
+  async updateSubscription(
+    toUpdateSubscription: UpdateSubscriptionDto,
+    subscriptionId: string,
+  ) {
+    try {
+      const subscription = await this.subscriptionsRepo.findOne(subscriptionId);
+      if (!subscription) {
+        return null;
+      }
+      const course = await this.mongoCoursesRepo.findOne(subscription.course);
+
+      const isCompleted =
+        course.modules.length ===
+        toUpdateSubscription?.completedModules?.length;
+      const updatedSubscription = await this.mongoSubsRepo.findOneAndUpdate(
+        { _id: new ObjectID(subscriptionId) },
+        {
+          $set: {
+            ...toUpdateSubscription,
+            status: isCompleted
+              ? SubscriptionStatus.COMPLETE
+              : SubscriptionStatus.PENDING,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+        { returnOriginal: false },
+      );
+      if (!updatedSubscription?.value) {
+        return null;
+      }
+      let populateUpdatedSubs = { ...updatedSubscription.value };
+      const modules = await this.populateModules(
+        populateUpdatedSubs.completedModules,
+      );
+      if (populateUpdatedSubs?.moduleInProgress) {
+        const moduleInProgress = await this.populateModule(
+          populateUpdatedSubs.moduleInProgress,
+        );
+        populateUpdatedSubs = { ...populateUpdatedSubs, moduleInProgress };
+      }
+
+      return {
+        ...populateUpdatedSubs,
+        completedModules: modules,
+        course,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Error in updating subscription.');
     }
   }
 

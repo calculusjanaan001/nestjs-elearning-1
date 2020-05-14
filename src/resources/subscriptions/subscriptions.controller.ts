@@ -8,6 +8,7 @@ import {
   Get,
   Param,
   NotFoundException,
+  Patch,
 } from '@nestjs/common';
 
 import { SubscriptionsService } from './subscriptions.service';
@@ -15,6 +16,7 @@ import { RolesGuard, AuthGuard } from '../../guards';
 import { Roles, User } from '../../decorators';
 
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { UserEntity } from '../users/entity/user.entity';
 
 @UseGuards(AuthGuard)
@@ -53,6 +55,25 @@ export class SubscriptionsController {
     );
     if (!subscription) {
       throw new NotFoundException('Subscription not found.');
+    }
+    return subscription;
+  }
+
+  @Patch(':id')
+  @Roles('student')
+  @UseGuards(RolesGuard)
+  @UsePipes(ValidationPipe)
+  async updateSubscription(
+    @Body() subscriptionBody: UpdateSubscriptionDto,
+    @Param('id') subscriptionId: string,
+  ) {
+    const subscription = await this.subscriptionsService.updateSubscription(
+      subscriptionBody,
+      subscriptionId,
+    );
+
+    if (!subscription) {
+      throw new NotFoundException('No subscription updated.');
     }
     return subscription;
   }

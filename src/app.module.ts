@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import { Connection } from 'typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 
 import { UsersModule } from './resources/users/users.module';
 import { AuthModule } from './resources/auth/auth.module';
@@ -13,6 +12,7 @@ import { SubscriptionsModule } from './resources/subscriptions/subscriptions.mod
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
+    MongooseModule.forRoot('mongodb://localhost/elearningv2'),
     AuthModule,
     UsersModule,
     SubjectsModule,
@@ -21,6 +21,4 @@ import { SubscriptionsModule } from './resources/subscriptions/subscriptions.mod
     SubscriptionsModule,
   ],
 })
-export class AppModule {
-  constructor(private connection: Connection) {}
-}
+export class AppModule {}

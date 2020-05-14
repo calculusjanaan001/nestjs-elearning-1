@@ -65,14 +65,16 @@ export class CoursesService {
       });
       const mappedCourses = [];
       for (const courseDetails of courses) {
-        const modules = [];
-        const subject = await this.mongoSubjectsRepo.findOne(
+        const subjectPromise = this.mongoSubjectsRepo.findOne(
           courseDetails.subject,
         );
-        for (const modId of courseDetails.modules) {
-          const moduleDetails = await this.mongoModulesRepo.findOne(modId);
-          modules.push(moduleDetails);
-        }
+        const modulesPromise = this.mongoModulesRepo.findByIds(
+          courseDetails.modules,
+        );
+        const [subject, modules] = await Promise.all([
+          subjectPromise,
+          modulesPromise,
+        ]);
         mappedCourses.push({ ...courseDetails, modules, subject });
       }
 
@@ -90,12 +92,13 @@ export class CoursesService {
       if (!course) {
         return null;
       }
-      const subject = await this.mongoSubjectsRepo.findOne(course.subject);
-      const modules = await Promise.all(
-        course.modules.map(async modId => {
-          return await this.mongoModulesRepo.findOne(modId);
-        }),
-      );
+
+      const subjectPromise = this.mongoSubjectsRepo.findOne(course.subject);
+      const modulesPromise = this.mongoModulesRepo.findByIds(course.modules);
+      const [subject, modules] = await Promise.all([
+        subjectPromise,
+        modulesPromise,
+      ]);
 
       return { ...course, modules, subject };
     } catch (error) {

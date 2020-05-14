@@ -6,6 +6,7 @@ import { ObjectID } from 'mongodb';
 
 import { ModuleEntity } from './entity/module.entity';
 import { CourseEntity } from '../courses/entity/course.entity';
+
 import { CreateModuleDto } from './dto/create-module.dto';
 import { UpdateModuleDto } from './dto/update-module.dto';
 

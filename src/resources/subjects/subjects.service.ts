@@ -1,6 +1,13 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Scope,
+  Inject,
+} from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { Request } from 'express';
 import { Repository } from 'typeorm';
 import { getMongoRepository } from 'typeorm';
 import { ObjectID } from 'mongodb';
@@ -12,20 +19,24 @@ import { CourseEntity } from '../courses/entity/course.entity';
 import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateSubjectDto } from './dto/update-subject.dto';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class SubjectsService {
   private readonly mongoUsersRepo;
   private readonly mongoCoursesRepo;
+  private readonly mongoSubjectsRepo;
 
   constructor(
     @InjectRepository(SubjectEntity)
     private subjectsRepo: Repository<SubjectEntity>,
+    @Inject(REQUEST) private request: Request,
   ) {
     this.mongoUsersRepo = getMongoRepository(UserEntity);
     this.mongoCoursesRepo = getMongoRepository(CourseEntity);
+    this.mongoSubjectsRepo = getMongoRepository(SubjectEntity);
   }
 
-  async addSubject(newSubject: CreateSubjectDto, user: UserEntity) {
+  async addSubject(newSubject: CreateSubjectDto) {
+    const user = (this.request as any).user;
     try {
       const slug = newSubject.title
         .toLowerCase()
@@ -57,14 +68,16 @@ export class SubjectsService {
       });
       const mappedSubjects = [];
       for (const subjectDetails of subjects) {
-        const courses = [];
-        const owner = await this.mongoUsersRepo.findOne(subjectDetails.owner, {
+        const ownerPromise = this.mongoUsersRepo.findOne(subjectDetails.owner, {
           select: ['_id', 'email', 'role', 'firstName', 'lastName'],
         });
-        for (const courseId of subjectDetails.courses) {
-          const coursesDetails = await this.mongoCoursesRepo.findOne(courseId);
-          courses.push(coursesDetails);
-        }
+        const coursesPromise = this.mongoCoursesRepo.findByIds(
+          subjectDetails.courses,
+        );
+        const [owner, courses] = await Promise.all([
+          ownerPromise,
+          coursesPromise,
+        ]);
         mappedSubjects.push({ ...subjectDetails, courses, owner });
       }
       return mappedSubjects;
@@ -82,11 +95,7 @@ export class SubjectsService {
       const ownerPromise = this.mongoUsersRepo.findOne(subject.owner, {
         select: ['_id', 'email', 'role', 'firstName', 'lastName'],
       });
-      const coursesPromise = Promise.all(
-        subject.courses.map(async courseId => {
-          return this.mongoCoursesRepo.findOne(courseId);
-        }),
-      );
+      const coursesPromise = this.mongoCoursesRepo.findByIds(subject.courses);
       const [owner, courses] = await Promise.all([
         ownerPromise,
         coursesPromise,
@@ -100,9 +109,7 @@ export class SubjectsService {
 
   async updateSubject(toUpdateSubject: UpdateSubjectDto, subjectId: string) {
     try {
-      const mongoSubjectRepo = getMongoRepository(SubjectEntity);
-
-      const updatedObject = await mongoSubjectRepo.findOneAndUpdate(
+      const updatedObject = await this.mongoSubjectsRepo.findOneAndUpdate(
         { _id: new ObjectID(subjectId) },
         { $set: { title: toUpdateSubject.title } },
         { returnOriginal: false },
@@ -116,9 +123,7 @@ export class SubjectsService {
 
   async deleteSubject(id: string) {
     try {
-      const mongoSubjectRepo = getMongoRepository(SubjectEntity);
-
-      const updatedObject = await mongoSubjectRepo.findOneAndUpdate(
+      const updatedObject = await this.mongoSubjectsRepo.findOneAndUpdate(
         { _id: new ObjectID(id) },
         { $set: { isActive: false } },
         { returnOriginal: false },

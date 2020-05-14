@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 
 import { AuthGuard, RolesGuard } from '../../guards';
-import { Roles, User } from '../../decorators';
+import { Roles } from '../../decorators';
 
 import { SubjectsService } from './subjects.service';
 import { isObjectIdValid } from '../../utils/validator';
@@ -31,8 +31,8 @@ export class SubjectsController {
   @Roles('instructor')
   @UseGuards(RolesGuard)
   @UsePipes(ValidationPipe)
-  createSubject(@User() user, @Body() subjectBody: CreateSubjectDto) {
-    return this.subjectsService.addSubject(subjectBody, user);
+  createSubject(@Body() subjectBody: CreateSubjectDto) {
+    return this.subjectsService.addSubject(subjectBody);
   }
 
   @Get()

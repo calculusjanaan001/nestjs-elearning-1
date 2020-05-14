@@ -138,7 +138,6 @@ export class SubscriptionsService {
         return null;
       }
       const course = await this.mongoCoursesRepo.findOne(subscription.course);
-
       const isCompleted =
         course.modules.length ===
         toUpdateSubscription?.completedModules?.length;
@@ -159,9 +158,15 @@ export class SubscriptionsService {
         return null;
       }
       let populateUpdatedSubs = { ...updatedSubscription.value };
-      const modules = await this.populateModules(
-        updatedSubscription.completedModules,
-      );
+      if (populateUpdatedSubs?.completedModules?.length) {
+        const modules = await this.populateModules(
+          populateUpdatedSubs.completedModules,
+        );
+        populateUpdatedSubs = {
+          ...populateUpdatedSubs,
+          completedModules: modules,
+        };
+      }
       if (populateUpdatedSubs?.moduleInProgress) {
         const moduleInProgress = await this.populateModule(
           populateUpdatedSubs.moduleInProgress,
@@ -171,7 +176,6 @@ export class SubscriptionsService {
 
       return {
         ...populateUpdatedSubs,
-        completedModules: modules,
         course,
       };
     } catch (error) {
@@ -187,7 +191,6 @@ export class SubscriptionsService {
 
       return deletedSubscription?.value;
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException('Error in deleting subscription.');
     }
   }
@@ -219,7 +222,7 @@ export class SubscriptionsService {
   private async populateModules(moduleList: Array<string>) {
     const objectIdList = moduleList.map(modId => new ObjectID(modId));
     try {
-      return await this.mongoModulesRepo.find({ _id: { $in: objectIdList } });
+      return await this.mongoModulesRepo.findByIds(objectIdList);
     } catch (error) {
       throw new InternalServerErrorException('Error in getting modules.');
     }

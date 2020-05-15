@@ -1,11 +1,11 @@
 import { Schema, Types } from 'mongoose';
 
-import { Subject } from '../model/subject.model';
+import { Module } from '../model/module.model';
 
-const SubjectSchema = new Schema<Subject>({
+const ModuleSchema = new Schema<Module>({
   title: { type: String, required: true, trim: true },
-  courses: [{ type: Types.ObjectId, ref: 'Course' }],
-  owner: { type: Types.ObjectId, ref: 'User', required: true },
+  text: { type: String, required: true, trim: true },
+  course: { type: Types.ObjectId, ref: 'Course' },
   isActive: { type: String, default: true },
   slug: { type: String, required: true, trim: true },
   // eslint-disable-next-line @typescript-eslint/camelcase
@@ -14,18 +14,18 @@ const SubjectSchema = new Schema<Subject>({
   createdAt: Date,
 });
 
-export const SubjectSchemaProvider = {
-  name: 'Subject',
-  useFactory: (): Schema<Subject> => {
-    SubjectSchema.pre<Subject>('save', async function() {
+export const ModuleSchemaProvider = {
+  name: 'Module',
+  useFactory: (): Schema<Module> => {
+    ModuleSchema.pre<Module>('save', async function() {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
-      const subject = this;
+      const module = this;
       const now = new Date().toISOString();
 
-      subject.createdAt = now;
-      subject.updatedAt = now;
+      module.createdAt = now;
+      module.updatedAt = now;
     });
 
-    return SubjectSchema;
+    return ModuleSchema;
   },
 };

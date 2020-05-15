@@ -1,9 +1,9 @@
-import * as mongoose from 'mongoose';
-import * as bcrypt from 'bcrypt';
+import { Schema } from 'mongoose';
+import { hash, compare } from 'bcrypt';
 
 import { User } from '../model/user.model';
 
-const UserSchema = new mongoose.Schema<User>({
+const UserSchema = new Schema<User>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, default: 'student', required: true },
@@ -15,7 +15,7 @@ const UserSchema = new mongoose.Schema<User>({
 
 export const UserSchemaProvider = {
   name: 'User',
-  useFactory: (): mongoose.Schema<User> => {
+  useFactory: (): Schema<User> => {
     UserSchema.pre<User>('save', async function() {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const user = this;
@@ -23,11 +23,11 @@ export const UserSchemaProvider = {
 
       user.createdAt = now;
       user.updatedAt = now;
-      user.password = await bcrypt.hash(user.password, 10);
+      user.password = await hash(user.password, 10);
     });
 
     UserSchema.methods.comparePassword = async function(password) {
-      return await bcrypt.compare(password, this.password);
+      return await compare(password, this.password);
     };
 
     return UserSchema;

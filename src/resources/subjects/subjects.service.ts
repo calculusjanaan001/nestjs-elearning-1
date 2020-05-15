@@ -7,8 +7,7 @@ import {
 import { REQUEST } from '@nestjs/core';
 import { InjectModel } from '@nestjs/mongoose';
 
-import { ObjectID } from 'mongodb';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Request } from 'express';
 
 import { CreateSubjectDto } from './dto/create-subject.dto';
@@ -36,7 +35,7 @@ export class SubjectsService {
       const slug = sluggify(createSubjectDto.title);
       const createdSubject = new this.subjectModel({
         ...createSubjectDto,
-        owner: new ObjectID(currentUser._id),
+        owner: new Types.ObjectId(currentUser._id),
         slug,
         // eslint-disable-next-line @typescript-eslint/camelcase
         slug_history: [slug],

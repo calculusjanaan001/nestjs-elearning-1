@@ -1,8 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
-import { ObjectID } from 'mongodb';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -24,7 +23,7 @@ export class CoursesService {
       const slug = sluggify(createCourseDto.title);
       const createdCourse = new this.courseModel({
         ...createCourseDto,
-        subject: new ObjectID(createCourseDto.subject),
+        subject: new Types.ObjectId(createCourseDto.subject),
         slug,
         // eslint-disable-next-line @typescript-eslint/camelcase
         slug_history: [slug],
@@ -50,6 +49,7 @@ export class CoursesService {
       return this.courseModel
         .find({ isActive: true })
         .populate('subject')
+        .populate('modules')
         .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting courses.');
@@ -61,6 +61,7 @@ export class CoursesService {
       return this.courseModel
         .findById(id)
         .populate('subject')
+        .populate('modules')
         .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting course.');

@@ -32,7 +32,7 @@ export class ModulesController {
   @UseGuards(RolesGuard)
   @UsePipes(ValidationPipe)
   addModule(@Body() moduleBody: CreateModuleDto) {
-    return this.modulesService.addModule(moduleBody);
+    return this.modulesService.createModule(moduleBody);
   }
 
   @Get()

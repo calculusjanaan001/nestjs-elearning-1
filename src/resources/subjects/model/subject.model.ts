@@ -1,10 +1,9 @@
-import { Document } from 'mongoose';
-import { ObjectID } from 'mongodb';
+import { Document, Types } from 'mongoose';
 
 export interface Subject extends Document {
   title: string;
-  courses: ObjectID[];
-  owner: ObjectID;
+  courses: Types.ObjectId[];
+  owner: Types.ObjectId;
   isActive: boolean;
   slug: string;
   slug_history: string[];

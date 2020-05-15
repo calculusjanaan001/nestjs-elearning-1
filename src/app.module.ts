@@ -15,6 +15,7 @@ import { SubscriptionsModule } from './resources/subscriptions/subscriptions.mod
     MongooseModule.forRoot('mongodb://localhost/elearningv2', {
       useUnifiedTopology: true,
       useNewUrlParser: true,
+      useFindAndModify: false,
     }),
     AuthModule,
     UsersModule,

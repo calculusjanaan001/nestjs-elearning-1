@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 
 import { SubjectsService } from './subjects.service';
-import { SubjectEntity } from './entity/subject.entity';
 import { SubjectsController } from './subjects.controller';
+import { SubjectSchemaProvider } from './schema/schema.provider';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SubjectEntity])],
+  imports: [MongooseModule.forFeatureAsync([SubjectSchemaProvider])],
   controllers: [SubjectsController],
   providers: [SubjectsService],
 })

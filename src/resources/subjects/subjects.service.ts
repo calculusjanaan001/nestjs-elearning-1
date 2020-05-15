@@ -1,130 +1,107 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Scope,
+  Inject,
+} from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+import { InjectModel } from '@nestjs/mongoose';
 
-import { Repository } from 'typeorm';
-import { getMongoRepository } from 'typeorm';
 import { ObjectID } from 'mongodb';
-
-import { SubjectEntity } from './entity/subject.entity';
-import { UserEntity } from '../users/entity/user.entity';
-import { CourseEntity } from '../courses/entity/course.entity';
+import { Model } from 'mongoose';
+import { Request } from 'express';
 
 import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateSubjectDto } from './dto/update-subject.dto';
 
-@Injectable()
+import { Subject } from './model/subject.model';
+import { User } from '../users/model/user.model';
+
+interface UserRequest extends Request {
+  user: User;
+}
+
+@Injectable({ scope: Scope.REQUEST })
 export class SubjectsService {
-  private readonly mongoUsersRepo;
-  private readonly mongoCoursesRepo;
-
   constructor(
-    @InjectRepository(SubjectEntity)
-    private subjectsRepo: Repository<SubjectEntity>,
-  ) {
-    this.mongoUsersRepo = getMongoRepository(UserEntity);
-    this.mongoCoursesRepo = getMongoRepository(CourseEntity);
-  }
+    @InjectModel('Subject') private subjectModel: Model<Subject>,
+    @Inject(REQUEST) private request: UserRequest,
+  ) {}
 
-  async addSubject(newSubject: CreateSubjectDto, user: UserEntity) {
+  async createSubject(createSubjectDto: CreateSubjectDto) {
+    const currentUser = this.request.user;
     try {
-      const slug = newSubject.title
+      const slug = createSubjectDto.title
         .toLowerCase()
         .split(' ')
         .join('-');
-      const dateNow = new Date().toISOString();
-      const addedSubject = await this.subjectsRepo.save({
-        title: newSubject.title,
-        courses: [],
-        owner: user._id.toString(),
-        isActive: true,
+      const createdSubject = new this.subjectModel({
+        ...createSubjectDto,
+        owner: new ObjectID(currentUser._id),
         slug,
         // eslint-disable-next-line @typescript-eslint/camelcase
         slug_history: [slug],
-        createdAt: dateNow,
-        updatedAt: dateNow,
       });
 
-      return addedSubject;
+      return await createdSubject.save();
     } catch (error) {
       throw new InternalServerErrorException('Error in saving subject.');
     }
   }
 
-  async getSubjects() {
+  getSubjects(): Promise<Subject[]> {
     try {
-      const subjects = await this.subjectsRepo.find({
-        where: { isActive: true },
-      });
-      const mappedSubjects = [];
-      for (const subjectDetails of subjects) {
-        const courses = [];
-        const owner = await this.mongoUsersRepo.findOne(subjectDetails.owner, {
-          select: ['_id', 'email', 'role', 'firstName', 'lastName'],
-        });
-        for (const courseId of subjectDetails.courses) {
-          const coursesDetails = await this.mongoCoursesRepo.findOne(courseId);
-          courses.push(coursesDetails);
-        }
-        mappedSubjects.push({ ...subjectDetails, courses, owner });
-      }
-      return mappedSubjects;
+      return this.subjectModel
+        .find({ isActive: true })
+        .populate('owner', '-password')
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting subjects.');
     }
   }
 
-  async getSubjectById(id: string) {
+  getSubjectById(id: string): Promise<Subject> {
     try {
-      const subject = await this.subjectsRepo.findOne(id);
-      if (!subject) {
-        return null;
-      }
-      const ownerPromise = this.mongoUsersRepo.findOne(subject.owner, {
-        select: ['_id', 'email', 'role', 'firstName', 'lastName'],
-      });
-      const coursesPromise = Promise.all(
-        subject.courses.map(async courseId => {
-          return this.mongoCoursesRepo.findOne(courseId);
-        }),
-      );
-      const [owner, courses] = await Promise.all([
-        ownerPromise,
-        coursesPromise,
-      ]);
-
-      return { ...subject, owner, courses };
+      return this.subjectModel
+        .findById(id)
+        .populate('owner', '-password')
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting subject.');
     }
   }
 
-  async updateSubject(toUpdateSubject: UpdateSubjectDto, subjectId: string) {
+  updateSubject(
+    updateSubjectDto: UpdateSubjectDto,
+    subjectId: string,
+  ): Promise<Subject> {
     try {
-      const mongoSubjectRepo = getMongoRepository(SubjectEntity);
-
-      const updatedObject = await mongoSubjectRepo.findOneAndUpdate(
-        { _id: new ObjectID(subjectId) },
-        { $set: { title: toUpdateSubject.title } },
-        { returnOriginal: false },
-      );
-
-      return updatedObject?.value;
+      return this.subjectModel
+        .findByIdAndUpdate(
+          subjectId,
+          {
+            ...updateSubjectDto,
+            updatedAt: new Date().toISOString(),
+          },
+          { new: true },
+        )
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in updating subject.');
     }
   }
 
-  async deleteSubject(id: string) {
+  deleteSubject(subjectId: string): Promise<Subject> {
     try {
-      const mongoSubjectRepo = getMongoRepository(SubjectEntity);
-
-      const updatedObject = await mongoSubjectRepo.findOneAndUpdate(
-        { _id: new ObjectID(id) },
-        { $set: { isActive: false } },
-        { returnOriginal: false },
-      );
-
-      return updatedObject?.value;
+      return this.subjectModel
+        .findByIdAndUpdate(
+          subjectId,
+          {
+            isActive: false,
+          },
+          { new: true },
+        )
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in deleting subject.');
     }

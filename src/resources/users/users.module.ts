@@ -5,13 +5,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { UserEntity } from './entity/user.entity';
-import { UserSchema } from './schemas/user.schema';
+import { UserSchemaProvider } from './schema/schema.provider';
 
 @Global()
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserEntity]),
-    MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
+    MongooseModule.forFeatureAsync([UserSchemaProvider]),
   ],
   controllers: [UsersController],
   providers: [UsersService],

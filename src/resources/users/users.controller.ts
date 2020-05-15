@@ -34,7 +34,7 @@ export class UsersController {
   @Roles('admin')
   @UseGuards(AuthGuard, RolesGuard)
   async getUserById(@Param('id') id: string) {
-    if (isObjectIdValid(id)) {
+    if (!isObjectIdValid(id)) {
       throw new BadRequestException('Invalid id.');
     }
     const user = await this.usersService.getUserById(id);
@@ -47,6 +47,6 @@ export class UsersController {
   @Post()
   @UsePipes(ValidationPipe)
   registerUser(@Body() userBody: CreateUserDto) {
-    return this.usersService.addUser(userBody);
+    return this.usersService.createUser(userBody);
   }
 }

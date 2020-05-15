@@ -1,7 +1,7 @@
-function isObjectIdValid(toCheck: string) {
-  const regx = new RegExp('^[0-9a-fA-F]{24}$');
+import * as mongoose from 'mongoose';
 
-  return regx.test(toCheck);
+function isObjectIdValid(toCheck: string) {
+  return mongoose.Types.ObjectId.isValid(toCheck);
 }
 
 export { isObjectIdValid };

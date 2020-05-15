@@ -10,18 +10,19 @@ import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './model/user.model';
 
-const PROJECTION = '_id email role firstName lastName createdAt updatedAt';
-
 @Injectable()
 export class UsersService {
   private readonly DUPLICATE_KEY_CODE = 11000;
+  private readonly USER_PROJECTION = '-password';
 
   constructor(@InjectModel('User') private userModel: Model<User>) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     try {
       const createdUser = new this.userModel(createUserDto);
-      return await createdUser.save();
+      const insertedUser = await createdUser.save();
+      delete insertedUser.password;
+      return insertedUser;
     } catch (error) {
       /** Duplicate key error code */
       if (error.code === this.DUPLICATE_KEY_CODE) {
@@ -33,7 +34,7 @@ export class UsersService {
 
   getAllUsers(): Promise<User[]> {
     try {
-      return this.userModel.find({}, PROJECTION).exec();
+      return this.userModel.find({}, this.USER_PROJECTION).exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting all user.');
     }
@@ -41,7 +42,7 @@ export class UsersService {
 
   getUserById(id: string): Promise<User> {
     try {
-      return this.userModel.findById(id, PROJECTION).exec();
+      return this.userModel.findById(id, this.USER_PROJECTION).exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting user.');
     }

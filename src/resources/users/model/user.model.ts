@@ -8,4 +8,6 @@ export interface User extends Document {
   lastName: string;
   createdAt: string;
   updatedAt: string;
+  /** Methods */
+  comparePassword?(candidatePassword: string): Promise<boolean>;
 }

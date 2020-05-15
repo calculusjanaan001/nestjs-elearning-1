@@ -1,32 +1,28 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectModel } from '@nestjs/mongoose';
 
-import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import { Model } from 'mongoose';
 
 import { CredentialsDto } from './dto/credentials.dto';
-import { UserEntity } from '../users/entity/user.entity';
+import { User } from '../users/model/user.model';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UserEntity) private usersRepo: Repository<UserEntity>,
+    @InjectModel('User') private userModel: Model<User>,
     private readonly jwtService: JwtService,
   ) {}
 
   async authLogin(credentials: CredentialsDto) {
     try {
-      const user = await this.usersRepo.findOne({
+      const user = await this.userModel.findOne({
         email: credentials.email,
       });
       if (!user) {
         return null;
       }
-      const compareResult = await bcrypt.compare(
-        credentials.password,
-        user.password,
-      );
+      const compareResult = await user.comparePassword(credentials.password);
       if (!compareResult) {
         return null;
       }

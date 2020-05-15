@@ -12,7 +12,10 @@ import { SubscriptionsModule } from './resources/subscriptions/subscriptions.mod
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
-    MongooseModule.forRoot('mongodb://localhost/elearningv2'),
+    MongooseModule.forRoot('mongodb://localhost/elearningv2', {
+      useUnifiedTopology: true,
+      useNewUrlParser: true,
+    }),
     AuthModule,
     UsersModule,
     SubjectsModule,

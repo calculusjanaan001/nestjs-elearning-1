@@ -15,6 +15,6 @@ import { UserSchemaProvider } from './schema/schema.provider';
   ],
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, MongooseModule],
 })
 export class UsersModule {}

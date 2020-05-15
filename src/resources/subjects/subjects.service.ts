@@ -17,6 +17,8 @@ import { UpdateSubjectDto } from './dto/update-subject.dto';
 import { Subject } from './model/subject.model';
 import { User } from '../users/model/user.model';
 
+import { sluggify } from '../../utils';
+
 interface UserRequest extends Request {
   user: User;
 }
@@ -31,10 +33,7 @@ export class SubjectsService {
   async createSubject(createSubjectDto: CreateSubjectDto) {
     const currentUser = this.request.user;
     try {
-      const slug = createSubjectDto.title
-        .toLowerCase()
-        .split(' ')
-        .join('-');
+      const slug = sluggify(createSubjectDto.title);
       const createdSubject = new this.subjectModel({
         ...createSubjectDto,
         owner: new ObjectID(currentUser._id),
@@ -54,6 +53,7 @@ export class SubjectsService {
       return this.subjectModel
         .find({ isActive: true })
         .populate('owner', '-password')
+        .populate('courses')
         .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting subjects.');
@@ -65,6 +65,7 @@ export class SubjectsService {
       return this.subjectModel
         .findById(id)
         .populate('owner', '-password')
+        .populate('courses')
         .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting subject.');
@@ -76,11 +77,15 @@ export class SubjectsService {
     subjectId: string,
   ): Promise<Subject> {
     try {
+      const slug = sluggify(updateSubjectDto.title);
       return this.subjectModel
         .findByIdAndUpdate(
           subjectId,
           {
             ...updateSubjectDto,
+            slug,
+            // eslint-disable-next-line @typescript-eslint/camelcase
+            $push: { slug_history: slug },
             updatedAt: new Date().toISOString(),
           },
           { new: true },

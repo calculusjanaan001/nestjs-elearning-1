@@ -15,7 +15,7 @@ import {
 
 import { AuthGuard, RolesGuard } from '../../guards';
 import { Roles } from '../../decorators';
-import { isObjectIdValid } from '../../utils/validator';
+import { isObjectIdValid } from '../../utils';
 
 import { SubjectsService } from './subjects.service';
 

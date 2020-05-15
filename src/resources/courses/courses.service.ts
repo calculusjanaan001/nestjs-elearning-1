@@ -1,131 +1,107 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectModel } from '@nestjs/mongoose';
 
-import { Repository } from 'typeorm';
-import { getMongoRepository } from 'typeorm';
 import { ObjectID } from 'mongodb';
+import { Model } from 'mongoose';
 
-import { CourseEntity } from './entity/course.entity';
-import { ModuleEntity } from '../modules/entity/module.entity';
-import { SubjectEntity } from '../subjects/entity/subject.entity';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
+import { Course } from './model/course.model';
+import { Subject } from '../subjects/model/subject.model';
+
+import { sluggify } from '../../utils';
+
 @Injectable()
 export class CoursesService {
-  private readonly mongoModulesRepo;
-  private readonly mongoSubjectsRepo;
-  private readonly mongoCoursesRepo;
-
   constructor(
-    @InjectRepository(CourseEntity)
-    private coursesRepo: Repository<CourseEntity>,
-  ) {
-    this.mongoModulesRepo = getMongoRepository(ModuleEntity);
-    this.mongoSubjectsRepo = getMongoRepository(SubjectEntity);
-    this.mongoCoursesRepo = getMongoRepository(CourseEntity);
-  }
+    @InjectModel('Course') private courseModel: Model<Course>,
+    @InjectModel('Subject') private subjectModel: Model<Subject>,
+  ) {}
 
-  async addCourse(newCourse: CreateCourseDto) {
+  async createCourse(createCourseDto: CreateCourseDto): Promise<Course> {
     try {
-      const slug = newCourse.title
-        .toLowerCase()
-        .split(' ')
-        .join('-');
-      const dateNow = new Date().toISOString();
-      const addedCourse = await this.coursesRepo.save({
-        ...newCourse,
-        modules: [],
+      const slug = sluggify(createCourseDto.title);
+      const createdCourse = new this.courseModel({
+        ...createCourseDto,
+        subject: new ObjectID(createCourseDto.subject),
         slug,
         // eslint-disable-next-line @typescript-eslint/camelcase
         slug_history: [slug],
-        isActive: true,
-        createdAt: dateNow,
-        updatedAt: dateNow,
+      });
+      const insertedCourse = await createdCourse.save();
+      await this.subjectModel.findByIdAndUpdate(createCourseDto.subject, {
+        $push: {
+          courses: insertedCourse._id,
+        },
+        $set: {
+          updatedAt: new Date().toISOString(),
+        },
       });
 
-      await this.mongoSubjectsRepo.findOneAndUpdate(
-        { _id: new ObjectID(newCourse.subject) },
-        {
-          $push: { courses: addedCourse._id },
-          $set: { updatedAt: dateNow },
-        },
-      );
-
-      return addedCourse;
+      return insertedCourse;
     } catch (error) {
       throw new InternalServerErrorException('Error in saving course.');
     }
   }
 
-  async getCourses() {
+  getCourses(): Promise<Course[]> {
     try {
-      const courses = await this.coursesRepo.find({
-        where: { isActive: true },
-      });
-      const mappedCourses = [];
-      for (const courseDetails of courses) {
-        const modules = [];
-        const subject = await this.mongoSubjectsRepo.findOne(
-          courseDetails.subject,
-        );
-        for (const modId of courseDetails.modules) {
-          const moduleDetails = await this.mongoModulesRepo.findOne(modId);
-          modules.push(moduleDetails);
-        }
-        mappedCourses.push({ ...courseDetails, modules, subject });
-      }
-
-      return mappedCourses;
+      return this.courseModel
+        .find({ isActive: true })
+        .populate('subject')
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting courses.');
     }
   }
 
-  async getCourseById(id: string) {
+  getCourseById(id: string): Promise<Course> {
     try {
-      const course = await this.coursesRepo.findOne(id, {
-        where: { isActive: true },
-      });
-      if (!course) {
-        return null;
-      }
-      const subject = await this.mongoSubjectsRepo.findOne(course.subject);
-      const modules = await Promise.all(
-        course.modules.map(async modId => {
-          return await this.mongoModulesRepo.findOne(modId);
-        }),
-      );
-
-      return { ...course, modules, subject };
+      return this.courseModel
+        .findById(id)
+        .populate('subject')
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting course.');
     }
   }
 
-  async updateCourse(toUpdateCourse: UpdateCourseDto, courseId: string) {
+  updateCourse(
+    updateCourseDto: UpdateCourseDto,
+    courseId: string,
+  ): Promise<Course> {
     try {
-      const updatedObject = await this.mongoCoursesRepo.findOneAndUpdate(
-        { _id: new ObjectID(courseId) },
-        { $set: { title: toUpdateCourse.title } },
-        { returnOriginal: false },
-      );
-
-      return updatedObject?.value;
+      const slug = sluggify(updateCourseDto.title);
+      return this.courseModel
+        .findByIdAndUpdate(
+          courseId,
+          {
+            ...updateCourseDto,
+            slug,
+            // eslint-disable-next-line @typescript-eslint/camelcase
+            $push: { slug_history: slug },
+            updatedAt: new Date().toISOString(),
+          },
+          { new: true },
+        )
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in updating course.');
     }
   }
 
-  async deleteCourse(courseId: string) {
+  deleteCourse(courseId: string): Promise<Course> {
     try {
-      const updatedObject = await this.mongoCoursesRepo.findOneAndUpdate(
-        { _id: new ObjectID(courseId) },
-        { $set: { isActive: false } },
-        { returnOriginal: false },
-      );
-
-      return updatedObject?.value;
+      return this.courseModel
+        .findByIdAndUpdate(
+          courseId,
+          {
+            isActive: false,
+          },
+          { new: true },
+        )
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in deleting course.');
     }

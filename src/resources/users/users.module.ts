@@ -1,20 +1,14 @@
-import { Module, Global } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { UserEntity } from './entity/user.entity';
 import { UserSchemaProvider } from './schema/schema.provider';
 
-@Global()
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([UserEntity]),
-    MongooseModule.forFeatureAsync([UserSchemaProvider]),
-  ],
+  imports: [MongooseModule.forFeatureAsync([UserSchemaProvider])],
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [TypeOrmModule, MongooseModule],
+  exports: [MongooseModule],
 })
 export class UsersModule {}

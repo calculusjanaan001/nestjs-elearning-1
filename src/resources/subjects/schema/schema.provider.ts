@@ -3,8 +3,8 @@ import * as mongoose from 'mongoose';
 import { Subject } from '../model/subject.model';
 
 const SubjectSchema = new mongoose.Schema<Subject>({
-  title: { type: String, required: true, unique: true, trim: true },
-  courses: [{ type: mongoose.Types.ObjectId }],
+  title: { type: String, required: true, trim: true },
+  courses: [{ type: mongoose.Types.ObjectId, ref: 'Course' }],
   owner: { type: mongoose.Types.ObjectId, ref: 'User', required: true },
   isActive: { type: String, default: true },
   slug: { type: String, required: true, trim: true },
@@ -17,9 +17,6 @@ const SubjectSchema = new mongoose.Schema<Subject>({
 export const SubjectSchemaProvider = {
   name: 'Subject',
   useFactory: (): mongoose.Schema<Subject> => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    SubjectSchema.plugin(require('mongoose-autopopulate'));
-
     SubjectSchema.pre<Subject>('save', async function() {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const subject = this;

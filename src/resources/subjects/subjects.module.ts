@@ -9,5 +9,6 @@ import { SubjectSchemaProvider } from './schema/schema.provider';
   imports: [MongooseModule.forFeatureAsync([SubjectSchemaProvider])],
   controllers: [SubjectsController],
   providers: [SubjectsService],
+  exports: [MongooseModule],
 })
 export class SubjectsModule {}

@@ -20,7 +20,7 @@ import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
-import { isObjectIdValid } from '../../utils/validator';
+import { isObjectIdValid } from '../../utils';
 
 @Controller('courses')
 @UseGuards(AuthGuard)
@@ -32,7 +32,7 @@ export class CoursesController {
   @UseGuards(RolesGuard)
   @UsePipes(ValidationPipe)
   addCourse(@Body() courseBody: CreateCourseDto) {
-    return this.coursesService.addCourse(courseBody);
+    return this.coursesService.createCourse(courseBody);
   }
 
   @Get()

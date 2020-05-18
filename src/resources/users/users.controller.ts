@@ -30,8 +30,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Roles('admin')
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(AuthGuard)
   async getUserById(@Param('id') id: string) {
     if (!isObjectIdValid(id)) {
       throw new BadRequestException('Invalid id.');

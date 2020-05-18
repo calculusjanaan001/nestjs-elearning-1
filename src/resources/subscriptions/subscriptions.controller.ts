@@ -19,7 +19,7 @@ import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 
 @UseGuards(AuthGuard)
-@Controller('subscriptions')
+@Controller('subscription')
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
@@ -32,15 +32,11 @@ export class SubscriptionsController {
   }
 
   @Get()
-  @Roles('student')
-  @UseGuards(RolesGuard)
   getSubscriptions() {
     return this.subscriptionsService.getUserSubscriptions();
   }
 
   @Get(':id')
-  @Roles('student')
-  @UseGuards(RolesGuard)
   async getSubscriptionById(@Param('id') subscriptionId: string) {
     const subscription = await this.subscriptionsService.getUserSubscriptionById(
       subscriptionId,

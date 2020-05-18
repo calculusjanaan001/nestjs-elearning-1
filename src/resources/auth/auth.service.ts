@@ -27,8 +27,9 @@ export class AuthService {
         return null;
       }
 
-      delete user.password;
-      const token = await this.jwtService.signAsync(JSON.stringify(user));
+      const token = await this.jwtService.signAsync(
+        JSON.stringify({ userId: user._id }),
+      );
       return token;
     } catch (error) {
       throw new InternalServerErrorException('Error in finding user.');

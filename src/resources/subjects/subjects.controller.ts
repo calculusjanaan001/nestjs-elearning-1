@@ -35,15 +35,11 @@ export class SubjectsController {
   }
 
   @Get()
-  @Roles('instructor')
-  @UseGuards(RolesGuard)
   getSubjects() {
     return this.subjectsService.getSubjects();
   }
 
   @Get(':id')
-  @Roles('instructor')
-  @UseGuards(RolesGuard)
   async getSubjectById(@Param('id') subjectId: string) {
     if (!isObjectIdValid(subjectId)) {
       throw new BadRequestException('Invalid id.');

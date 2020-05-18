@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { UsersModule } from './resources/users/users.module';
@@ -11,7 +10,6 @@ import { SubscriptionsModule } from './resources/subscriptions/subscriptions.mod
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(),
     MongooseModule.forRoot('mongodb://localhost/elearningv2', {
       useUnifiedTopology: true,
       useNewUrlParser: true,

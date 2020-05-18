@@ -6,6 +6,7 @@ const SubscriptionSchema = new Schema<Subscription>({
   course: { type: Types.ObjectId, ref: 'Course', required: true },
   completedModules: [{ type: Types.ObjectId, ref: 'Module' }],
   moduleInProgress: { type: Types.ObjectId, ref: 'Module', default: null },
+  subscriber: { type: Types.ObjectId, ref: 'User' },
   status: {
     type: String,
     enum: [SubscriptionStatus.PENDING, SubscriptionStatus.COMPLETE],

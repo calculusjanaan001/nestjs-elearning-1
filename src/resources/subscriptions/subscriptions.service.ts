@@ -1,89 +1,57 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Scope,
+  Inject,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { REQUEST } from '@nestjs/core';
 
-import { Repository, getMongoRepository } from 'typeorm';
-import { ObjectID } from 'mongodb';
+import { Request } from 'express';
+import { Model, Types } from 'mongoose';
 
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
-import {
-  SubscriptionEntity,
-  SubscriptionStatus,
-} from './entity/subscription.entity';
-import { UserEntity } from '../users/entity/user.entity';
-import { CourseEntity } from '../courses/entity/course.entity';
-import { ModuleEntity } from '../modules/entity/module.entity';
 
-@Injectable()
+import { Subscription, SubscriptionStatus } from './model/subscription.model';
+import { User } from '../users/model/user.model';
+import { Course } from '../courses/model/course.model';
+
+interface UserRequest extends Request {
+  user: User;
+}
+
+@Injectable({ scope: Scope.REQUEST })
 export class SubscriptionsService {
-  private readonly mongoCoursesRepo;
-  private readonly mongoModulesRepo;
-  private readonly mongoSubsRepo;
-
   constructor(
-    @InjectRepository(SubscriptionEntity)
-    private subscriptionsRepo: Repository<SubscriptionEntity>,
-  ) {
-    this.mongoCoursesRepo = getMongoRepository(CourseEntity);
-    this.mongoModulesRepo = getMongoRepository(ModuleEntity);
-    this.mongoSubsRepo = getMongoRepository(SubscriptionEntity);
-  }
+    @InjectModel('Subscription') private subscriptionModel: Model<Subscription>,
+    @Inject(REQUEST) private request: UserRequest,
+  ) {}
 
-  async subscribe(
-    newSubscription: CreateSubscriptionDto,
-    currentUser: UserEntity,
-  ) {
+  async createSubscription(
+    createSubscriptionDto: CreateSubscriptionDto,
+  ): Promise<Subscription> {
+    const currentUser = this.request.user;
     try {
-      const dateNow = new Date().toISOString();
-      const addedSubscription = await this.subscriptionsRepo.save({
-        completedModules: [],
-        moduleInProgress: null,
-        status: SubscriptionStatus.PENDING,
-        course: newSubscription.course,
-        subscriber: currentUser._id.toString(),
-        createdAt: dateNow,
-        updatedAt: dateNow,
+      const createdSubscription = new this.subscriptionModel({
+        course: new Types.ObjectId(createSubscriptionDto.course),
+        subscriber: currentUser._id,
       });
-
-      return addedSubscription;
+      return await createdSubscription.save();
     } catch (error) {
       throw new InternalServerErrorException('Error in saving subscription.');
     }
   }
 
-  async getUserSubscriptions(currentUser: UserEntity) {
+  getUserSubscriptions(): Promise<Subscription[]> {
+    const currentUser = this.request.user;
     try {
-      const subscriptions = await this.subscriptionsRepo.find({
-        where: { subscriber: currentUser._id.toString() },
-      });
-      const mappedSubscriptions = [];
-      for (const subsDetails of subscriptions) {
-        let populateSubscription = { ...subsDetails };
-        const course = await this.populateCourse(subsDetails.course);
-        if (subsDetails?.moduleInProgress) {
-          const module = await this.populateModule(
-            subsDetails?.moduleInProgress,
-          );
-          populateSubscription = {
-            ...populateSubscription,
-            moduleInProgress: module,
-          };
-        }
-        if (subsDetails?.completedModules.length) {
-          const modules = [];
-          for (const modId of subsDetails.completedModules) {
-            const module = await this.populateModule(modId);
-            modules.push(module);
-          }
-          populateSubscription = {
-            ...populateSubscription,
-            completedModules: modules,
-          };
-        }
-        mappedSubscriptions.push({ ...populateSubscription, course });
-      }
-
-      return mappedSubscriptions;
+      return this.subscriptionModel
+        .find({ subscriber: currentUser._id })
+        .populate('course')
+        .populate('moduleInProgress')
+        .populate('completedModules')
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException(
         "Error in getting user's subscriptions.",
@@ -91,137 +59,79 @@ export class SubscriptionsService {
     }
   }
 
-  async getUserSubscriptionById(
-    currentUser: UserEntity,
-    subscriptionId: string,
-  ) {
+  getUserSubscriptionById(subscriptionId: string): Promise<Subscription> {
+    const currentUser = this.request.user;
     try {
-      const subscription = await this.subscriptionsRepo.findOne({
-        where: {
-          subscriber: currentUser._id.toString(),
-          _id: new ObjectID(subscriptionId),
-        },
-      });
-      if (!subscription) {
-        return null;
-      }
-      let populatedSubscription = { ...subscription };
-      const course = await this.populateCourse(subscription.course);
-      if (subscription?.moduleInProgress) {
-        const module = await this.populateModule(subscription.moduleInProgress);
-        populatedSubscription = {
-          ...populatedSubscription,
-          moduleInProgress: module,
-        };
-      }
-      if (subscription?.completedModules.length) {
-        const completedModules = await this.populateModules(
-          subscription.completedModules,
-        );
-        populatedSubscription = { ...populatedSubscription, completedModules };
-      }
-      return { ...populatedSubscription, course };
+      return this.subscriptionModel
+        .findOne({
+          _id: subscriptionId,
+          subscriber: currentUser._id,
+        })
+        .populate('course')
+        .populate('moduleInProgress')
+        .populate('completedModules')
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException(
-        "Error in getting user's subscriptions.",
+        "Error in getting user's subscription.",
       );
     }
   }
 
   async updateSubscription(
-    toUpdateSubscription: UpdateSubscriptionDto,
+    updateSubscriptionDto: UpdateSubscriptionDto,
     subscriptionId: string,
-  ) {
+  ): Promise<Subscription> {
+    const currentUser = this.request.user;
     try {
-      const subscription = await this.subscriptionsRepo.findOne(subscriptionId);
+      const subscription = await this.subscriptionModel
+        .findOne({
+          _id: subscriptionId,
+          subscriber: currentUser._id,
+        })
+        .populate('course')
+        .exec();
       if (!subscription) {
         return null;
       }
-      const course = await this.mongoCoursesRepo.findOne(subscription.course);
-
-      const isCompleted =
+      const populatedSubscription = subscription.toJSON();
+      const course = populatedSubscription.course as Course;
+      const status =
         course.modules.length ===
-        toUpdateSubscription?.completedModules?.length;
-      const updatedSubscription = await this.mongoSubsRepo.findOneAndUpdate(
-        { _id: new ObjectID(subscriptionId) },
-        {
-          $set: {
-            ...toUpdateSubscription,
-            status: isCompleted
-              ? SubscriptionStatus.COMPLETE
-              : SubscriptionStatus.PENDING,
+        updateSubscriptionDto?.completedModules?.length
+          ? SubscriptionStatus.COMPLETE
+          : SubscriptionStatus.PENDING;
+      const mergedModule = updateSubscriptionDto?.completedModules || [];
+      const mappedModulesId = mergedModule.map(id => new Types.ObjectId(id));
+      return await this.subscriptionModel
+        .findByIdAndUpdate(
+          subscriptionId,
+          {
+            completedModules: mappedModulesId.length
+              ? mappedModulesId
+              : subscription.completedModules,
+            moduleInProgress: updateSubscriptionDto?.moduleInProgress
+              ? new Types.ObjectId(updateSubscriptionDto?.moduleInProgress)
+              : null,
+            status,
             updatedAt: new Date().toISOString(),
           },
-        },
-        { returnOriginal: false },
-      );
-      if (!updatedSubscription?.value) {
-        return null;
-      }
-      let populateUpdatedSubs = { ...updatedSubscription.value };
-      const modules = await this.populateModules(
-        populateUpdatedSubs.completedModules,
-      );
-      if (populateUpdatedSubs?.moduleInProgress) {
-        const moduleInProgress = await this.populateModule(
-          populateUpdatedSubs.moduleInProgress,
-        );
-        populateUpdatedSubs = { ...populateUpdatedSubs, moduleInProgress };
-      }
-
-      return {
-        ...populateUpdatedSubs,
-        completedModules: modules,
-        course,
-      };
+          { new: true },
+        )
+        .populate('course')
+        .populate('completedModules')
+        .populate('moduleInProgress')
+        .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in updating subscription.');
     }
   }
 
-  async deleteSubscription(id: string) {
+  deleteSubscription(id: string): Promise<Subscription> {
     try {
-      const deletedSubscription = await this.mongoSubsRepo.findOneAndDelete({
-        _id: new ObjectID(id),
-      });
-
-      return deletedSubscription?.value;
+      return this.subscriptionModel.findByIdAndDelete(id).exec();
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException('Error in deleting subscription.');
-    }
-  }
-
-  private async populateCourse(courseId: string) {
-    try {
-      const course = await this.mongoCoursesRepo.findOne(courseId);
-      if (!course) {
-        return null;
-      }
-      return course;
-    } catch (error) {
-      throw new InternalServerErrorException('Error in getting course.');
-    }
-  }
-
-  private async populateModule(moduleId: string) {
-    try {
-      const module = await this.mongoModulesRepo.findOne(moduleId);
-      if (!module) {
-        return null;
-      }
-      return module;
-    } catch (error) {
-      throw new InternalServerErrorException('Error in getting module.');
-    }
-  }
-
-  private async populateModules(moduleList: Array<string>) {
-    const objectIdList = moduleList.map(modId => new ObjectID(modId));
-    try {
-      return await this.mongoModulesRepo.find({ _id: { $in: objectIdList } });
-    } catch (error) {
-      throw new InternalServerErrorException('Error in getting modules.');
     }
   }
 }

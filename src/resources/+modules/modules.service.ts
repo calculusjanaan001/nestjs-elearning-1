@@ -51,7 +51,7 @@ export class ModulesService {
       );
       return {
         data: paginatedModules.docs,
-        total: paginatedModules.limit,
+        total: paginatedModules.total,
         skip: paginatedModules.offset,
         limit: paginatedModules.limit,
       };

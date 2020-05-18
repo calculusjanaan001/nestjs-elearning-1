@@ -55,7 +55,7 @@ export class SubjectsService {
       );
       return {
         data: paginatedSubjects.docs,
-        total: paginatedSubjects.limit,
+        total: paginatedSubjects.total,
         skip: paginatedSubjects.offset,
         limit: paginatedSubjects.limit,
       };

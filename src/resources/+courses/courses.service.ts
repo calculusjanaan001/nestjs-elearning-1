@@ -54,7 +54,7 @@ export class CoursesService {
       );
       return {
         data: paginatedCourses.docs,
-        total: paginatedCourses.limit,
+        total: paginatedCourses.total,
         skip: paginatedCourses.offset,
         limit: paginatedCourses.limit,
       };

@@ -56,7 +56,7 @@ export class SubscriptionsService {
 
       return {
         data: paginatedSubscription.docs,
-        total: paginatedSubscription.limit,
+        total: paginatedSubscription.total,
         skip: paginatedSubscription.offset,
         limit: paginatedSubscription.limit,
       };

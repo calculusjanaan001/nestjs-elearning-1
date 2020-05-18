@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ModulesService } from './modules.service';
-
-import { ModulesController } from './modules.controller';
 import { MongooseModule } from '@nestjs/mongoose';
+
+import { ModulesService } from './modules.service';
+import { ModulesController } from './modules.controller';
 import { ModuleSchemaProvider } from './schema/schema.provider';
 
 import { CoursesModule } from '../courses/courses.module';

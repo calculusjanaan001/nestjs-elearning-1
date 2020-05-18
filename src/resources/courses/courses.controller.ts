@@ -13,10 +13,9 @@ import {
   Delete,
 } from '@nestjs/common';
 
-import { AuthGuard, RolesGuard } from '../../guards';
-import { Roles } from '../../decorators/roles.decorator';
-
+import { AuthGuard, Roles, RolesGuard } from '../core';
 import { CoursesService } from './courses.service';
+
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 

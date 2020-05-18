@@ -13,10 +13,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { AuthGuard, RolesGuard } from '../../guards';
-import { Roles } from '../../decorators';
 import { isObjectIdValid } from '../../utils';
 
+import { AuthGuard, Roles, RolesGuard } from '../core';
 import { SubjectsService } from './subjects.service';
 
 import { CreateSubjectDto } from './dto/create-subject.dto';

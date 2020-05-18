@@ -17,8 +17,7 @@ import { ModulesService } from './modules.service';
 import { CreateModuleDto } from './dto/create-module.dto';
 import { UpdateModuleDto } from './dto/update-module.dto';
 
-import { Roles } from '../../decorators';
-import { RolesGuard, AuthGuard } from '../../guards';
+import { RolesGuard, Roles, AuthGuard } from '../core';
 
 import { isObjectIdValid } from '../../utils/validator';
 

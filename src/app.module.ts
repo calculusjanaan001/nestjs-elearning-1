@@ -24,6 +24,7 @@ import { CoreModule } from './resources/core/core.module';
         useCreateIndex: true,
       },
     ),
+    CoreModule,
     AuthModule,
     UsersModule,
     SubjectsModule,

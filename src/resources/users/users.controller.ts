@@ -14,8 +14,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
-import { Roles } from '../../decorators';
-import { RolesGuard, AuthGuard } from '../../guards';
+import { RolesGuard, Roles, AuthGuard } from '../core';
 
 import { isObjectIdValid } from '../../utils/validator';
 

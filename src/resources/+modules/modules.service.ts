@@ -64,7 +64,13 @@ export class ModulesService {
     try {
       return this.moduleModel
         .findById(id)
-        .populate('course')
+        .populate({
+          path: 'course',
+          populate: {
+            path: 'subject',
+            populate: { path: 'owner', select: '-password' },
+          },
+        })
         .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in getting module.');

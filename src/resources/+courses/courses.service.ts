@@ -67,7 +67,10 @@ export class CoursesService {
     try {
       return this.courseModel
         .findById(id)
-        .populate('subject')
+        .populate({
+          path: 'subject',
+          populate: { path: 'owner', select: '-password' },
+        })
         .populate('modules')
         .exec();
     } catch (error) {

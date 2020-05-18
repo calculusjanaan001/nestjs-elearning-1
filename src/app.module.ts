@@ -18,6 +18,7 @@ import { SubscriptionsModule } from './resources/subscriptions/subscriptions.mod
         useUnifiedTopology: true,
         useNewUrlParser: true,
         useFindAndModify: false,
+        useCreateIndex: true,
       },
     ),
     AuthModule,

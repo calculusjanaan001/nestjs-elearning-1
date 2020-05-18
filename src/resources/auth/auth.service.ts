@@ -31,6 +31,7 @@ export class AuthService {
       const token = await this.jwtService.signAsync(JSON.stringify(user));
       return token;
     } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException('Error in finding user.');
     }
   }

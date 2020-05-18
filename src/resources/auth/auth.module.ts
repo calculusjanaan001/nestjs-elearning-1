@@ -9,7 +9,11 @@ import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    JwtModule.register({ secret: 'hard!to-guess_secret' }),
+    JwtModule.registerAsync({
+      useFactory: () => ({
+        secret: 'hard!to-guess_secret',
+      }),
+    }),
     UsersModule,
   ],
   controllers: [AuthController],

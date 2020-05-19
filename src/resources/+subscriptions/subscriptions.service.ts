@@ -47,8 +47,17 @@ export class SubscriptionsService {
         { subscriber: currentUser._id },
         {
           populate: [
-            { path: 'course' },
-            { path: 'moduleInProgress' },
+            {
+              path: 'course',
+              populate: [
+                {
+                  path: 'subject',
+                  populate: { path: 'owner', select: '-password' },
+                },
+                { path: 'modules', select: 'title' },
+              ],
+            },
+            { path: 'moduleInProgress', populate: { path: 'course' } },
             { path: 'completedModules' },
           ],
         },

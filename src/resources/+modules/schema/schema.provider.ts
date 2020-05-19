@@ -4,7 +4,7 @@ import { Module } from '../model/module.model';
 
 const ModuleSchema = new Schema<Module>({
   title: { type: String, required: true, trim: true },
-  text: { type: String, required: true, trim: true },
+  text: { type: String, trim: true },
   course: { type: Types.ObjectId, ref: 'Course' },
   isActive: { type: String, default: true },
   slug: { type: String, required: true, trim: true },

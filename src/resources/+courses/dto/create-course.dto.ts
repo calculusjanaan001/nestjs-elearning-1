@@ -5,4 +5,6 @@ export class CreateCourseDto {
   public title: string;
   @IsNotEmpty()
   public subject: string;
+  @IsNotEmpty()
+  public image: string;
 }

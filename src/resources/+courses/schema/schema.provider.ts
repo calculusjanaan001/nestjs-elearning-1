@@ -7,6 +7,8 @@ const CourseSchema = new Schema<Course>({
   subject: { type: Types.ObjectId, ref: 'Subject' },
   modules: [{ type: Types.ObjectId, ref: 'Module' }],
   isActive: { type: String, default: true },
+  image: { type: String, default: '' },
+  description: { type: String, default: '' },
   slug: { type: String, required: true, trim: true },
   // eslint-disable-next-line @typescript-eslint/camelcase
   slug_history: [{ type: String, required: true, trim: true }],

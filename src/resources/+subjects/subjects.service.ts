@@ -81,10 +81,14 @@ export class SubjectsService {
     subjectId: string,
   ): Promise<Subject> {
     try {
+      const currentUser = this.request.user;
       const slug = sluggify(updateSubjectDto.title);
       return this.subjectModel
-        .findByIdAndUpdate(
-          subjectId,
+        .findOneAndUpdate(
+          {
+            _id: new Types.ObjectId(subjectId),
+            owner: currentUser._id,
+          },
           {
             ...updateSubjectDto,
             slug,
@@ -102,9 +106,13 @@ export class SubjectsService {
 
   deleteSubject(subjectId: string): Promise<Subject> {
     try {
+      const currentUser = this.request.user;
       return this.subjectModel
-        .findByIdAndUpdate(
-          subjectId,
+        .findOneAndUpdate(
+          {
+            _id: new Types.ObjectId(subjectId),
+            owner: currentUser._id,
+          },
           {
             isActive: false,
           },

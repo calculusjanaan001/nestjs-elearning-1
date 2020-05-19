@@ -1,5 +1,11 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Scope,
+  Inject,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { REQUEST } from '@nestjs/core';
 
 import { Model, Types } from 'mongoose';
 
@@ -8,16 +14,18 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 
 import { Course } from './model/course.model';
 import { Subject } from '../+subjects/model/subject.model';
+import { User } from '../+users/model/user.model';
 
-import { PaginationModel, PaginationResult } from '../shared';
+import { PaginationModel, PaginationResult, UserRequest } from '../shared';
 
 import { sluggify } from '../../utils';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class CoursesService {
   constructor(
     @InjectModel('Course') private courseModel: PaginationModel<Course>,
     @InjectModel('Subject') private subjectModel: Model<Subject>,
+    @Inject(REQUEST) private request: UserRequest,
   ) {}
 
   async createCourse(createCourseDto: CreateCourseDto): Promise<Course> {
@@ -78,15 +86,21 @@ export class CoursesService {
     }
   }
 
-  updateCourse(
+  async updateCourse(
     updateCourseDto: UpdateCourseDto,
     courseId: string,
   ): Promise<Course> {
     try {
+      const currentUser = this.request.user;
+      if (!(await this.isCurrentUserPermitted(currentUser, courseId))) {
+        return null;
+      }
       const slug = sluggify(updateCourseDto.title);
       return this.courseModel
-        .findByIdAndUpdate(
-          courseId,
+        .findOneAndUpdate(
+          {
+            _id: new Types.ObjectId(courseId),
+          },
           {
             ...updateCourseDto,
             slug,
@@ -102,8 +116,12 @@ export class CoursesService {
     }
   }
 
-  deleteCourse(courseId: string): Promise<Course> {
+  async deleteCourse(courseId: string): Promise<Course> {
     try {
+      const currentUser = this.request.user;
+      if (!(await this.isCurrentUserPermitted(currentUser, courseId))) {
+        return null;
+      }
       return this.courseModel
         .findByIdAndUpdate(
           courseId,
@@ -115,6 +133,27 @@ export class CoursesService {
         .exec();
     } catch (error) {
       throw new InternalServerErrorException('Error in deleting course.');
+    }
+  }
+
+  private async isCurrentUserPermitted(
+    currentUser: User,
+    courseId: string,
+  ): Promise<boolean> {
+    try {
+      const course = await this.courseModel
+        .findById(courseId)
+        .populate('subject')
+        .exec();
+      const jsonCourse = course.toJSON();
+      if (
+        jsonCourse?.subject?.owner.toString() !== currentUser?._id?.toString()
+      ) {
+        return false;
+      }
+      return true;
+    } catch (error) {
+      throw new InternalServerErrorException('Error in finding course.');
     }
   }
 }

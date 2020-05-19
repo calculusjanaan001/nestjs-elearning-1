@@ -14,7 +14,6 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 
 import { Course } from './model/course.model';
 import { Subject } from '../+subjects/model/subject.model';
-import { User } from '../+users/model/user.model';
 
 import { PaginationModel, PaginationResult, UserRequest } from '../shared';
 
@@ -91,8 +90,7 @@ export class CoursesService {
     courseId: string,
   ): Promise<Course> {
     try {
-      const currentUser = this.request.user;
-      if (!(await this.isCurrentUserPermitted(currentUser, courseId))) {
+      if (!(await this.isCurrentUserPermitted(courseId))) {
         return null;
       }
       const slug = sluggify(updateCourseDto.title);
@@ -118,8 +116,7 @@ export class CoursesService {
 
   async deleteCourse(courseId: string): Promise<Course> {
     try {
-      const currentUser = this.request.user;
-      if (!(await this.isCurrentUserPermitted(currentUser, courseId))) {
+      if (!(await this.isCurrentUserPermitted(courseId))) {
         return null;
       }
       return this.courseModel
@@ -136,11 +133,9 @@ export class CoursesService {
     }
   }
 
-  private async isCurrentUserPermitted(
-    currentUser: User,
-    courseId: string,
-  ): Promise<boolean> {
+  private async isCurrentUserPermitted(courseId: string): Promise<boolean> {
     try {
+      const currentUser = this.request.user;
       const course = await this.courseModel
         .findById(courseId)
         .populate('subject')

@@ -1,5 +1,11 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Scope,
+  Inject,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { REQUEST } from '@nestjs/core';
 
 import { Model, Types } from 'mongoose';
 
@@ -9,15 +15,16 @@ import { UpdateModuleDto } from './dto/update-module.dto';
 import { Course } from '../+courses/model/course.model';
 import { Module } from './model/module.model';
 
-import { PaginationModel, PaginationResult } from '../shared';
+import { PaginationModel, PaginationResult, UserRequest } from '../shared';
 
 import { sluggify } from '../../utils';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ModulesService {
   constructor(
     @InjectModel('Module') private moduleModel: PaginationModel<Module>,
     @InjectModel('Course') private courseModel: Model<Course>,
+    @Inject(REQUEST) private request: UserRequest,
   ) {}
 
   async createModule(createModuleDto: CreateModuleDto): Promise<Module> {
@@ -77,8 +84,11 @@ export class ModulesService {
     }
   }
 
-  updateModule(updateModuleDto: UpdateModuleDto, moduleId: string) {
+  async updateModule(updateModuleDto: UpdateModuleDto, moduleId: string) {
     try {
+      if (!(await this.isCurrentUserPermitted(moduleId))) {
+        return null;
+      }
       const slug = sluggify(updateModuleDto.title);
       return this.moduleModel
         .findByIdAndUpdate(
@@ -98,8 +108,11 @@ export class ModulesService {
     }
   }
 
-  deleteModule(moduleId: string): Promise<Module> {
+  async deleteModule(moduleId: string): Promise<Module> {
     try {
+      if (!(await this.isCurrentUserPermitted(moduleId))) {
+        return null;
+      }
       return this.moduleModel
         .findByIdAndUpdate(
           moduleId,
@@ -112,5 +125,23 @@ export class ModulesService {
     } catch (error) {
       throw new InternalServerErrorException('Error in deleting module.');
     }
+  }
+
+  private async isCurrentUserPermitted(moduleId: string) {
+    const currentUser = this.request.user;
+
+    const module = await this.moduleModel
+      .findById(moduleId)
+      .populate({ path: 'course', populate: { path: 'subject' } })
+      .exec();
+
+    const jsonModule = module.toJSON();
+    if (
+      jsonModule?.course?.subject?.owner.toString() !==
+      currentUser._id.toString()
+    ) {
+      return false;
+    }
+    return true;
   }
 }
